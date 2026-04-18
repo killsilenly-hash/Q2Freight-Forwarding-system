@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Create Job</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        :root {
+            --bg-main: #18293b;
+            --bg-shell: #22364d;
+            --bg-panel: #24384f;
+            --bg-panel-soft: #2a415b;
+            --bg-card: #29425e;
+            --bg-card-dark: #22364d;
+            --text-main: #ffffff;
+            --text-soft: #c9d5e2;
+            --text-muted: #9fb2c5;
+            --line-soft: rgba(255, 255, 255, 0.08);
+            --line-strong: rgba(255, 255, 255, 0.14);
+            --accent: #3498db;
+            --success: #27ae60;
+            --danger: #c0392b;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #21344a 0%, #2f4d72 100%);
+            margin: 0;
+            color: var(--text-main);
+        }
+
+        .job-detail-page {
+            min-height: 100vh;
+        }
+
+        .nav-toggle-btn {
+            position: fixed;
+            top: 18px;
+            left: 18px;
+            z-index: 1201;
+            border: none;
+            border-radius: 10px;
+            background: rgba(24, 42, 61, 0.96);
+            color: #ffffff;
+            padding: 11px 16px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .nav-toggle-btn:hover {
+            background: #2b4f75;
+        }
+
+        .nav-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 18, 28, 0.42);
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: 0.25s ease;
+            z-index: 1198;
+        }
+
+        .job-detail-page.nav-open .nav-overlay {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        .top-nav {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100vh;
+            padding-top: 72px;
+            background: linear-gradient(180deg, #132131 0%, #1d3147 100%);
+            margin: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 18px 0 40px rgba(0, 0, 0, 0.28);
+            transform: translateX(-100%);
+            transition: transform 0.25s ease;
+            z-index: 1200;
+        }
+
+        .job-detail-page.nav-open .top-nav {
+            transform: translateX(0);
+        }
+
+        .top-nav a,
+        .top-nav .dropbtn {
+            display: block;
+            width: 100%;
+            color: white;
+            text-align: left;
+            padding: 14px 20px;
+            text-decoration: none;
+            font-size: 15px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .top-nav a:hover,
+        .dropdown:hover .dropbtn {
+            background-color: rgba(52, 152, 219, 0.22);
+        }
+
+        .dropdown {
+            position: relative;
+            width: 100%;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: static;
+            background-color: rgba(255, 255, 255, 0.04);
+            min-width: 100%;
+            box-shadow: none;
+            z-index: 999;
+            border-radius: 0;
+            overflow: hidden;
+        }
+
+        .dropdown-content a {
+            color: #d9e7f4;
+            padding: 12px 20px 12px 34px;
+            text-decoration: none;
+            display: block;
+            text-align: left;
+            white-space: nowrap;
+            font-size: 14px;
+        }
+
+        .dropdown-content a:hover {
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .page-container {
+            position: relative;
+            max-width: 1180px;
+            margin: 90px auto 40px auto;
+            padding: 0 20px;
+        }
+
+        .breadcrumb-bar {
+            margin-bottom: 18px;
+            color: rgba(255, 255, 255, 0.86);
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .breadcrumb-link {
+            color: rgba(255, 255, 255, 0.92);
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .breadcrumb-link:hover {
+            text-decoration: underline;
+        }
+
+        .breadcrumb-sep {
+            color: rgba(255, 255, 255, 0.45);
+        }
+
+        .page-shell {
+            background: rgba(15, 25, 37, 0.28);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 22px;
+            padding: 22px;
+            box-shadow: 0 18px 46px rgba(0, 0, 0, 0.18);
+            backdrop-filter: blur(4px);
+        }
+
+        .page-header {
+            background: rgba(20, 33, 48, 0.60);
+            border: 1px solid var(--line-soft);
+            border-radius: 16px;
+            padding: 22px 24px;
+            margin-bottom: 22px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+            backdrop-filter: blur(6px);
+        }
+
+        .dashboard-company {
+            font-size: 13px;
+            letter-spacing: 1.5px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        .page-title {
+            margin: 0;
+            font-size: 32px;
+            font-weight: bold;
+            letter-spacing: 0.2px;
+        }
+
+        .page-subtitle {
+            margin: 8px 0 0 0;
+            color: var(--text-soft);
+            font-size: 15px;
+        }
+
+        .error-box {
+            color: #ffd8dd;
+            background: rgba(176, 42, 55, 0.22);
+            border: 1px solid rgba(241, 174, 181, 0.45);
+            padding: 12px 14px;
+            border-radius: 10px;
+            margin-bottom: 18px;
+        }
+
+        .panel-card {
+            background: linear-gradient(180deg, rgba(22, 35, 50, 0.78) 0%, rgba(37, 57, 80, 0.82) 100%);
+            border: 1px solid var(--line-soft);
+            border-radius: 16px;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .panel-head {
+            padding: 16px 20px 14px 20px;
+            border-bottom: 1px solid var(--line-soft);
+        }
+
+        .panel-head h2 {
+            margin: 0;
+            font-size: 21px;
+            color: #ffffff;
+        }
+
+        .panel-head p {
+            margin: 8px 0 0 0;
+            color: var(--text-soft);
+            font-size: 14px;
+        }
+
+        .panel-body {
+            padding: 18px 20px 20px 20px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            gap: 14px 18px;
+            align-items: center;
+        }
+
+        .form-grid label {
+            font-weight: bold;
+            color: #dce7f2;
+        }
+
+        .form-grid input[type="text"],
+        .form-grid input[type="date"],
+        .form-grid select,
+        .form-grid textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            border-radius: 10px;
+            font-size: 14px;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+            background: rgba(255, 255, 255, 0.10);
+            color: #ffffff;
+            outline: none;
+        }
+
+        .form-grid textarea {
+            min-height: 110px;
+            resize: vertical;
+        }
+
+        .form-grid input::placeholder,
+        .form-grid textarea::placeholder {
+            color: #c7d7e6;
+        }
+
+        .form-grid input:focus,
+        .form-grid select:focus,
+        .form-grid textarea:focus {
+            border-color: #5bb5ff;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.18);
+        }
+
+        .form-grid option {
+            color: #1f2d3a;
+        }
+
+        .radio-row {
+            display: flex;
+            gap: 18px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .radio-row label {
+            font-weight: normal;
+            color: #ffffff;
+        }
+
+        .inline-info-box {
+            background-color: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            border-radius: 10px;
+            padding: 12px 14px;
+            color: #ffffff;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .primary-btn,
+        .secondary-link,
+        .quick-btn,
+        .secondary-btn {
+            padding: 11px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            text-decoration: none;
+            cursor: pointer;
+            transition: 0.16s ease;
+        }
+
+        .primary-btn,
+        .quick-btn {
+            border: none;
+            background-color: var(--accent);
+            color: white;
+        }
+
+        .primary-btn:hover,
+        .quick-btn:hover {
+            background-color: #2387cf;
+            transform: translateY(-1px);
+        }
+
+        .secondary-link,
+        .secondary-btn {
+            background-color: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+        }
+
+        .secondary-link:hover,
+        .secondary-btn:hover {
+            background-color: rgba(255, 255, 255, 0.14);
+        }
+
+        #quick_add_contact_box {
+            display: none;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            padding: 20px;
+            background: linear-gradient(180deg, rgba(22, 35, 50, 0.88) 0%, rgba(37, 57, 80, 0.90) 100%);
+            max-width: 700px;
+            border-radius: 16px;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+            margin-top: 18px;
+        }
+
+        #quick_add_contact_box h3 {
+            margin-top: 0;
+            color: #ffffff;
+        }
+
+        #quick_add_contact_box label {
+            color: #dce7f2;
+            font-weight: bold;
+        }
+
+        #quick_add_contact_box input[type="text"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            border-radius: 10px;
+            font-size: 14px;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+            background: rgba(255, 255, 255, 0.10);
+            color: #ffffff;
+            outline: none;
+        }
+
+        #quick_add_contact_box input[type="text"]:focus {
+            border-color: #5bb5ff;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.18);
+        }
+
+        .page-footer-label {
+            margin-top: 28px;
+            text-align: center;
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.78);
+            letter-spacing: 0.8px;
+            font-weight: bold;
+        }
+
+        .system-name-top-right {
+            position: absolute;
+            top: -52px;
+            right: 20px;
+            pointer-events: none;
+
+            font-family: "Segoe UI", Arial, sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            line-height: 1;
+            white-space: nowrap;
+
+            color: #9fb7d1;
+        }
+
+        .bottom-right-text {
+            position: absolute;
+            bottom: -30px;
+            right: 20px;
+            pointer-events: none;
+            z-index: 9999;
+            font-family: "Segoe UI", Arial, sans-serif;
+            font-size: 10px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        @media (max-width: 768px) {
+            .page-container {
+                padding: 0 14px;
+            }
+
+            .system-name-top-right,
+            .bottom-right-text {
+                position: static;
+                display: block;
+                margin-bottom: 12px;
+                text-align: right;
+            }
+
+            .page-title {
+                font-size: 26px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .primary-btn,
+            .secondary-link,
+            .quick-btn,
+            .secondary-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+
+        .global-header-bar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 0;
+            height: 50px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 0 200px;
+            font-size: 12px;
+            letter-spacing: 1.5px;
+            color: #9fb7d1;
+            text-shadow: 0 0 6px rgba(159, 183, 209, 0.25);
+            z-index: 80;
+
+            font-family: "Segoe UI", "Inter", Arial, sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+
+<body class="job-detail-page">
+
+    <button class="nav-toggle-btn" onclick="toggleNav()">☰ Menu</button>
+    <div class="nav-overlay" onclick="toggleNav()"></div>
+
+    {% include "navbar.html" %}
+
+
+    <div class="page-container">
+        <div class="system-name-top-right">Q-TWO (M) SDN BHD FREIGHT FORWARDING SYSTEM</div>
+
+        <div class="page-shell">
+
+            <div class="page-header">
+                <h1 class="page-title">Create Job</h1>
+                <p class="page-subtitle">
+                    Create a new shipment job and fill in the booking intake information.
+                </p>
+            </div>
+
+            {% if error %}
+            <div class="error-box">
+                <strong>{{ error }}</strong>
+            </div>
+            {% endif %}
+
+            <form method="POST">
+
+                <div class="panel-card">
+                    <div class="panel-head">
+                        <h2>Basic Job Information</h2>
+                        <p>Set the main job, client, workflow, and numbering details.</p>
+                    </div>
+
+                    <div class="panel-body">
+                        <div class="form-grid">
+                            <label>Company</label>
+                            <select name="company_id" id="company_id" required>
+                                <option value="">-- Select Company --</option>
+                                {% for company in companies %}
+                                <option value="{{ company.id }}">{{ company.company_name }} ({{ company.company_prefix
+                                    }})</option>
+                                {% endfor %}
+                            </select>
+
+                            <label>Job Type</label>
+                            <select name="job_type" id="job_type" required>
+                                <option value="">-- Select Type --</option>
+                                <option>Import</option>
+                                <option>Export</option>
+                            </select>
+
+                            <label>Workflow Template</label>
+                            <select name="workflow_template" required>
+                                <option value="">Select Workflow Template</option>
+                                {% for template in workflow_templates %}
+                                <option value="{{ template }}">{{ template }}</option>
+                                {% endfor %}
+                            </select>
+
+                            <label>Client</label>
+                            <select name="client_id" id="client_id" required>
+                                <option value="">-- Select Client --</option>
+                                {% for client in clients %}
+                                <option value="{{ client.id }}" data-client-name="{{ client.name }}">
+                                    {{ client.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+
+                            <label>Number Mode</label>
+                            <div class="radio-row">
+                                <label>
+                                    <input type="radio" name="number_mode" value="auto" checked
+                                        onclick="toggleNumberMode()"> Auto Generate
+                                </label>
+                                <label>
+                                    <input type="radio" name="number_mode" value="manual" onclick="toggleNumberMode()">
+                                    Manual Entry
+                                </label>
+                            </div>
+
+                            <label>Next Auto Job Number</label>
+                            <div id="auto_preview_box" class="inline-info-box">
+                                <strong id="job_number_preview">--</strong>
+                            </div>
+
+                            <label id="manual_job_number_label" style="display:none;">Manual Job Number</label>
+                            <div id="manual_input_box" style="display:none;">
+                                <input type="text" name="job_number" id="job_number" placeholder="Example: Q2EX2030">
+                            </div>
+
+                            <label>Description</label>
+                            <textarea name="description" rows="4"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-card">
+                    <div class="panel-head">
+                        <h2>Shipment Dates</h2>
+                        <p>Set the shipment timeline for this job.</p>
+                    </div>
+
+                    <div class="panel-body">
+                        <div class="form-grid">
+                            <label>Created Date</label>
+                            <input type="date" name="created_date">
+
+                            <label>ETD</label>
+                            <input type="date" name="etd">
+
+                            <label>ETA</label>
+                            <input type="date" name="eta">
+
+                            <label>Delivery Date</label>
+                            <input type="date" name="delivery_date">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-card">
+                    <div class="panel-head">
+                        <h2>Booking Intake Information</h2>
+                        <p>Fill in operational intake details and shipment reference information.</p>
+                    </div>
+
+                    <div class="panel-body">
+                        <div class="form-grid">
+                            <label>Date Received</label>
+                            <input type="date" name="date_received">
+
+                            <label>Customer Name</label>
+                            <input type="text" name="customer_name" id="customer_name">
+
+                            <label>Customer PO Number</label>
+                            <input type="text" name="customer_po">
+
+                            <label>Product Name</label>
+                            <input type="text" name="product_name">
+
+                            <label>Quantity</label>
+                            <input type="text" name="quantity">
+
+                            <label>Packaging Type</label>
+                            <input type="text" name="packaging_type">
+
+                            <label>Destination Country</label>
+                            <input type="text" name="destination_country">
+
+                            <label>Incoterm</label>
+                            <input type="text" name="incoterm">
+
+                            <label>Vessel / Flight</label>
+                            <input type="text" name="vessel_flight">
+
+                            <label>Requested Shipment Date</label>
+                            <input type="date" name="requested_ship_date">
+
+                            <label>Person In Charge (PIC)</label>
+                            <select name="pic" id="pic">
+                                <option value="">-- Select PIC --</option>
+                            </select>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" id="show_quick_add_contact_btn" class="quick-btn">+ Quick Add
+                                PIC</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-card">
+
+
+                    <div class="panel-body">
+                        <div class="form-actions">
+                            <button type="submit" class="primary-btn">Create Job</button>
+                            <a href="/" class="secondary-link">Back to Dashboard</a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <div id="quick_add_contact_box">
+                <h3>Quick Add Contact for This Client</h3>
+
+                <div id="quick_add_contact_message" style="margin-bottom:10px;"></div>
+
+                <div>
+                    <label>Contact Name</label><br>
+                    <input type="text" id="quick_contact_name">
+                </div>
+
+                <br>
+
+                <div>
+                    <label>Role</label><br>
+                    <input type="text" id="quick_contact_role" placeholder="Example: Import PIC / Export PIC / Finance">
+                </div>
+
+                <br>
+
+                <div>
+                    <label>Email</label><br>
+                    <input type="text" id="quick_contact_email">
+                </div>
+
+                <br>
+
+                <div>
+                    <label>Mobile</label><br>
+                    <input type="text" id="quick_contact_mobile">
+                </div>
+
+                <br>
+
+                <div>
+                    <label>Office Phone</label><br>
+                    <input type="text" id="quick_contact_office_phone">
+                </div>
+
+                <br>
+
+                <div>
+                    <label>Intercom</label><br>
+                    <input type="text" id="quick_contact_intercom">
+                </div>
+
+                <br>
+
+                <div class="form-actions">
+                    <button type="button" id="save_quick_contact_btn" class="primary-btn">Save Contact</button>
+                    <button type="button" id="cancel_quick_contact_btn" class="secondary-btn">Cancel</button>
+                </div>
+            </div>
+
+            <div class="bottom-right-text">© 2026 Freelance Generation</div>
+
+        </div>
+    </div>
+
+    <script>
+        function toggleNav() {
+            document.body.classList.toggle("nav-open");
+        }
+
+        function toggleNumberMode() {
+            const selectedMode = document.querySelector('input[name="number_mode"]:checked').value;
+            const autoBox = document.getElementById("auto_preview_box");
+            const manualBox = document.getElementById("manual_input_box");
+            const manualLabel = document.getElementById("manual_job_number_label");
+
+            if (selectedMode === "manual") {
+                autoBox.style.display = "none";
+                manualBox.style.display = "block";
+                manualLabel.style.display = "block";
+            } else {
+                autoBox.style.display = "block";
+                manualBox.style.display = "none";
+                manualLabel.style.display = "none";
+                updatePreview();
+            }
+        }
+
+        function updatePreview() {
+            const companyId = document.getElementById("company_id").value;
+            const jobType = document.getElementById("job_type").value;
+            const preview = document.getElementById("job_number_preview");
+            const selectedMode = document.querySelector('input[name="number_mode"]:checked').value;
+
+            if (selectedMode !== "auto") {
+                return;
+            }
+
+            if (!companyId || !jobType) {
+                preview.textContent = "--";
+                return;
+            }
+
+            fetch(`/preview_job_number?company_id=${companyId}&job_type=${jobType}`)
+                .then(response => response.json())
+                .then(data => {
+                    preview.textContent = data.job_number || "--";
+                })
+                .catch(() => {
+                    preview.textContent = "--";
+                });
+        }
+
+        document.getElementById("company_id").addEventListener("change", updatePreview);
+        document.getElementById("job_type").addEventListener("change", updatePreview);
+
+        window.onload = function () {
+            toggleNumberMode();
+            updatePreview();
+        };
+    </script>
+
+    <script>
+        const clientContacts = [
+            {% for contact in contacts %}
+        {
+            id: { { contact.id } },
+            client_id: { { contact.client_id } },
+            contact_name: { { contact.contact_name | tojson } },
+            role: { { (contact.role or "") | tojson } },
+            email: { { (contact.email or "") | tojson } },
+            mobile: { { (contact.mobile or "") | tojson } },
+            office_phone: { { (contact.office_phone or "") | tojson } },
+            intercom: { { (contact.intercom or "") | tojson } }
+        } {% if not loop.last %}, {% endif %}
+        {% endfor %}
+        ];
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const clientSelect = document.getElementById("client_id");
+            const jobTypeSelect = document.getElementById("job_type");
+
+            if (clientSelect) {
+                clientSelect.addEventListener("change", updateClientAutoFill);
+            }
+
+            if (jobTypeSelect) {
+                jobTypeSelect.addEventListener("change", updateClientAutoFill);
+            }
+        });
+    </script>
+
+    <script>
+        function normalizeText(value) {
+            return (value || "").trim().toLowerCase();
+        }
+
+        function fillCustomerName() {
+            const clientSelect = document.getElementById("client_id");
+            const customerNameInput = document.getElementById("customer_name");
+
+            if (!clientSelect || !customerNameInput) {
+                return;
+            }
+
+            const selectedOption = clientSelect.options[clientSelect.selectedIndex];
+            const clientName = selectedOption
+                ? selectedOption.getAttribute("data-client-name") || ""
+                : "";
+
+            customerNameInput.value = clientName;
+        }
+
+        function autoSelectPIC(forceChange = true) {
+            const jobTypeSelect = document.getElementById("job_type");
+            const picSelect = document.getElementById("pic");
+
+            if (!jobTypeSelect || !picSelect) {
+                return;
+            }
+
+            const jobType = normalizeText(jobTypeSelect.value);
+
+            if (!jobType) {
+                return;
+            }
+
+            let targetKeyword = "";
+
+            if (jobType === "import") {
+                targetKeyword = "import";
+            } else if (jobType === "export") {
+                targetKeyword = "export";
+            } else {
+                return;
+            }
+
+            let matchedIndex = -1;
+
+            for (let i = 1; i < picSelect.options.length; i++) {
+                const option = picSelect.options[i];
+                const roleText = normalizeText(option.getAttribute("data-role"));
+                const labelText = normalizeText(option.textContent);
+
+                if (
+                    roleText.includes(targetKeyword) ||
+                    labelText.includes(targetKeyword)
+                ) {
+                    matchedIndex = i;
+                    break;
+                }
+            }
+
+            if (matchedIndex !== -1) {
+                if (forceChange || !picSelect.value) {
+                    picSelect.selectedIndex = matchedIndex;
+                }
+            }
+        }
+
+        function loadClientContacts(preferredPicName = "") {
+            const clientSelect = document.getElementById("client_id");
+            const picSelect = document.getElementById("pic");
+
+            if (!clientSelect || !picSelect) {
+                return;
+            }
+
+            const selectedClientId = clientSelect.value;
+
+            picSelect.innerHTML = '<option value="">-- Select PIC --</option>';
+
+            fillCustomerName();
+
+            if (!selectedClientId) {
+                return;
+            }
+
+            fetch(`/get_client_contacts/${selectedClientId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const contacts = data.contacts || [];
+
+                    contacts.forEach(contact => {
+                        const option = document.createElement("option");
+                        option.value = contact.name;
+                        option.textContent = contact.label;
+                        option.setAttribute("data-role", contact.role || "");
+                        picSelect.appendChild(option);
+                    });
+
+                    if (preferredPicName) {
+                        for (let i = 0; i < picSelect.options.length; i++) {
+                            if (picSelect.options[i].value === preferredPicName) {
+                                picSelect.selectedIndex = i;
+                                return;
+                            }
+                        }
+                    }
+
+                    autoSelectPIC(true);
+                })
+                .catch(error => {
+                    console.error("Error loading client contacts:", error);
+                });
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const clientSelect = document.getElementById("client_id");
+            const jobTypeSelect = document.getElementById("job_type");
+
+            if (clientSelect) {
+                clientSelect.addEventListener("change", function () {
+                    loadClientContacts();
+                });
+            }
+
+            if (jobTypeSelect) {
+                jobTypeSelect.addEventListener("change", function () {
+                    autoSelectPIC(true);
+                });
+            }
+
+            fillCustomerName();
+
+            if (clientSelect && clientSelect.value) {
+                loadClientContacts();
+            }
+        });
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const showBtn = document.getElementById("show_quick_add_contact_btn");
+            const saveBtn = document.getElementById("save_quick_contact_btn");
+            const cancelBtn = document.getElementById("cancel_quick_contact_btn");
+
+            const box = document.getElementById("quick_add_contact_box");
+            const messageBox = document.getElementById("quick_add_contact_message");
+
+            const clientSelect = document.getElementById("client_id");
+            const picSelect = document.getElementById("pic");
+
+            const contactNameInput = document.getElementById("quick_contact_name");
+            const roleInput = document.getElementById("quick_contact_role");
+            const emailInput = document.getElementById("quick_contact_email");
+            const mobileInput = document.getElementById("quick_contact_mobile");
+            const officePhoneInput = document.getElementById("quick_contact_office_phone");
+            const intercomInput = document.getElementById("quick_contact_intercom");
+
+            function clearQuickContactForm() {
+                contactNameInput.value = "";
+                roleInput.value = "";
+                emailInput.value = "";
+                mobileInput.value = "";
+                officePhoneInput.value = "";
+                intercomInput.value = "";
+                messageBox.innerHTML = "";
+            }
+
+            function openQuickAddBox() {
+                if (!clientSelect.value) {
+                    messageBox.innerHTML = '<span style="color:red;">Please select a client first.</span>';
+                    box.style.display = "block";
+                    return;
+                }
+
+                clearQuickContactForm();
+                box.style.display = "block";
+            }
+
+            function closeQuickAddBox() {
+                box.style.display = "none";
+                clearQuickContactForm();
+            }
+
+            if (showBtn && box) {
+                showBtn.addEventListener("click", function () {
+                    openQuickAddBox();
+                });
+            }
+
+            if (cancelBtn && box) {
+                cancelBtn.addEventListener("click", function () {
+                    closeQuickAddBox();
+                });
+            }
+
+            if (saveBtn) {
+                saveBtn.addEventListener("click", function () {
+                    const clientId = clientSelect.value;
+                    const contactName = contactNameInput.value.trim();
+                    const role = roleInput.value.trim();
+                    const email = emailInput.value.trim();
+                    const mobile = mobileInput.value.trim();
+                    const officePhone = officePhoneInput.value.trim();
+                    const intercom = intercomInput.value.trim();
+
+                    if (!clientId) {
+                        messageBox.innerHTML = '<span style="color:red;">Please select a client first.</span>';
+                        return;
+                    }
+
+                    if (!contactName) {
+                        messageBox.innerHTML = '<span style="color:red;">Contact Name is required.</span>';
+                        return;
+                    }
+
+                    const formData = new URLSearchParams();
+                    formData.append("client_id", clientId);
+                    formData.append("contact_name", contactName);
+                    formData.append("role", role);
+                    formData.append("email", email);
+                    formData.append("mobile", mobile);
+                    formData.append("office_phone", officePhone);
+                    formData.append("intercom", intercom);
+
+                    fetch("/quick_add_client_contact", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/x-www-form-urlencoded"
+                        },
+                        body: formData.toString()
+                    })
+                        .then(async response => {
+                            const data = await response.json();
+
+                            if (!response.ok) {
+                                throw new Error(data.message || "Failed to save contact.");
+                            }
+
+                            return data;
+                        })
+                        .then(data => {
+                            messageBox.innerHTML = '<span style="color:green;">' + data.message + '</span>';
+
+                            if (typeof loadClientContacts === "function") {
+                                loadClientContacts();
+                            }
+
+                            setTimeout(function () {
+                                for (let i = 0; i < picSelect.options.length; i++) {
+                                    if (picSelect.options[i].value === data.contact.name) {
+                                        picSelect.selectedIndex = i;
+                                        break;
+                                    }
+                                }
+
+                                closeQuickAddBox();
+                            }, 300);
+                        })
+                        .catch(error => {
+                            messageBox.innerHTML = '<span style="color:red;">' + error.message + '</span>';
+                        });
+                });
+            }
+        });
+    </script>
+
+</body>
+
+</html>

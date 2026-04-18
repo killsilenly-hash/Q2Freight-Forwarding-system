@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Completed Jobs Archive</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        :root {
+            --bg-main: #18293b;
+            --bg-shell: #22364d;
+            --bg-panel: #24384f;
+            --bg-panel-soft: #2a415b;
+            --bg-card: #29425e;
+            --bg-card-dark: #22364d;
+            --text-main: #ffffff;
+            --text-soft: #c9d5e2;
+            --text-muted: #9fb2c5;
+            --line-soft: rgba(255, 255, 255, 0.08);
+            --line-strong: rgba(255, 255, 255, 0.14);
+            --accent: #3498db;
+            --success: #27ae60;
+            --danger: #c0392b;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #21344a 0%, #2f4d72 100%);
+            margin: 0;
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        .job-detail-page {
+            min-height: 100vh;
+        }
+
+        .nav-toggle-btn {
+            position: fixed;
+            top: 18px;
+            left: 18px;
+            z-index: 1201;
+            border: none;
+            border-radius: 10px;
+            background: rgba(24, 42, 61, 0.96);
+            color: #ffffff;
+            padding: 11px 16px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .nav-toggle-btn:hover {
+            background: #2b4f75;
+        }
+
+        .nav-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 18, 28, 0.42);
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: 0.25s ease;
+            z-index: 1198;
+        }
+
+        .job-detail-page.nav-open .nav-overlay {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        .top-nav {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100vh;
+            padding-top: 72px;
+            background: linear-gradient(180deg, #132131 0%, #1d3147 100%);
+            margin: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 18px 0 40px rgba(0, 0, 0, 0.28);
+            transform: translateX(-100%);
+            transition: transform 0.25s ease;
+            z-index: 1200;
+        }
+
+        .job-detail-page.nav-open .top-nav {
+            transform: translateX(0);
+        }
+
+        .top-nav a,
+        .top-nav .dropbtn {
+            display: block;
+            width: 100%;
+            color: white;
+            text-align: left;
+            padding: 14px 20px;
+            text-decoration: none;
+            font-size: 15px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .top-nav a:hover,
+        .dropdown:hover .dropbtn {
+            background-color: rgba(52, 152, 219, 0.22);
+        }
+
+        .dropdown {
+            position: relative;
+            width: 100%;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: static;
+            background-color: rgba(255, 255, 255, 0.04);
+            min-width: 100%;
+            box-shadow: none;
+            z-index: 999;
+            border-radius: 0;
+            overflow: hidden;
+        }
+
+        .dropdown-content a {
+            color: #d9e7f4;
+            padding: 12px 20px 12px 34px;
+            text-decoration: none;
+            display: block;
+            text-align: left;
+            white-space: nowrap;
+            font-size: 14px;
+        }
+
+        .dropdown-content a:hover {
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .page-container {
+            position: relative;
+            max-width: 1380px;
+            margin: 90px auto 40px auto;
+            padding: 0 20px;
+        }
+
+        .system-name-top-right {
+            position: absolute;
+            top: -52px;
+            right: 20px;
+            pointer-events: none;
+            font-family: "Segoe UI", Arial, sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            line-height: 1;
+            white-space: nowrap;
+            color: #9fb7d1;
+        }
+
+        .page-shell {
+            background: rgba(15, 25, 37, 0.28);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 22px;
+            padding: 22px;
+            box-shadow: 0 18px 46px rgba(0, 0, 0, 0.18);
+            backdrop-filter: blur(4px);
+        }
+
+        .page-header {
+            background: rgba(20, 33, 48, 0.60);
+            border: 1px solid var(--line-soft);
+            border-radius: 16px;
+            padding: 22px 24px;
+            margin-bottom: 22px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+            backdrop-filter: blur(6px);
+        }
+
+        .page-title {
+            margin: 0;
+            font-size: 32px;
+            font-weight: bold;
+            letter-spacing: 0.2px;
+        }
+
+        .page-subtitle {
+            margin: 8px 0 0 0;
+            color: var(--text-soft);
+            font-size: 15px;
+        }
+
+        .panel-card {
+            background: linear-gradient(180deg, rgba(22, 35, 50, 0.78) 0%, rgba(37, 57, 80, 0.82) 100%);
+            border: 1px solid var(--line-soft);
+            border-radius: 16px;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .panel-head {
+            padding: 16px 20px 14px 20px;
+            border-bottom: 1px solid var(--line-soft);
+        }
+
+        .panel-head h2 {
+            margin: 0;
+            font-size: 21px;
+            color: #ffffff;
+        }
+
+        .panel-head p {
+            margin: 8px 0 0 0;
+            color: var(--text-soft);
+            font-size: 14px;
+        }
+
+        .panel-body {
+            padding: 18px 20px 20px 20px;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: 180px 1fr;
+            gap: 14px 18px;
+            align-items: center;
+        }
+
+        .filter-grid label {
+            font-weight: bold;
+            color: #dce7f2;
+        }
+
+        .filter-grid input[type="text"],
+        .filter-grid select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            border-radius: 10px;
+            font-size: 14px;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+            background: rgba(255, 255, 255, 0.10);
+            color: #ffffff;
+            outline: none;
+        }
+
+        .filter-grid input::placeholder {
+            color: #c7d7e6;
+        }
+
+        .filter-grid input:focus,
+        .filter-grid select:focus {
+            border-color: #5bb5ff;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.18);
+        }
+
+        .filter-grid option {
+            color: #1f2d3a;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .primary-btn,
+        .secondary-link,
+        .table-link-btn {
+            padding: 11px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            text-decoration: none;
+            cursor: pointer;
+            transition: 0.16s ease;
+        }
+
+        .primary-btn,
+        .table-link-btn {
+            border: none;
+            background-color: var(--accent);
+            color: white;
+        }
+
+        .primary-btn:hover,
+        .table-link-btn:hover {
+            background-color: #2387cf;
+            transform: translateY(-1px);
+        }
+
+        .secondary-link {
+            background-color: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+        }
+
+        .secondary-link:hover {
+            background-color: rgba(255, 255, 255, 0.14);
+        }
+
+        .data-table-wrap {
+            width: 100%;
+            overflow-x: auto;
+            padding: 10px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+            min-width: 1650px;
+        }
+
+        .data-table th {
+            text-align: left;
+            padding: 16px 18px;
+            font-size: 13px;
+            color: #1f3247;
+            border-bottom: 1px solid #d8e3ee;
+            background-color: #edf4fb;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .data-table td {
+            padding: 18px 18px;
+            border-bottom: 1px solid #e2eaf2;
+            vertical-align: top;
+            color: #203247;
+        }
+
+        .job-link {
+            color: #2c5ea8;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .job-link:hover {
+            text-decoration: underline;
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-table tr:hover td {
+            background-color: #f4f9ff;
+        }
+
+        .status-completed {
+            background-color: #edf9f1;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #1f6f43;
+            background: #dff4e7;
+            border: 1px solid #bfe5cc;
+            white-space: nowrap;
+        }
+
+        .empty-box {
+            padding: 14px 16px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-soft);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .page-footer-label {
+            margin-top: 28px;
+            text-align: center;
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.78);
+            letter-spacing: 0.8px;
+            font-weight: bold;
+        }
+
+        .bottom-right-text {
+            position: absolute;
+            bottom: -40px;
+            right: 24px;
+            pointer-events: none;
+            z-index: 9999;
+            font-family: "Segoe UI", Arial, sans-serif;
+            font-size: 10px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        @media (max-width: 768px) {
+            .page-container {
+                padding: 0 14px;
+            }
+
+            .page-title {
+                font-size: 26px;
+            }
+
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .primary-btn,
+            .secondary-link,
+            .table-link-btn {
+                width: 100%;
+                text-align: center;
+            }
+
+            .system-name-top-right,
+            .bottom-right-text {
+                position: static;
+                display: block;
+                margin-bottom: 12px;
+                text-align: right;
+            }
+        }
+    </style>
+</head>
+
+<body class="job-detail-page">
+
+    <button class="nav-toggle-btn" onclick="toggleNav()">☰ Menu</button>
+
+    <div class="nav-overlay" onclick="toggleNav()"></div>
+    {% include "navbar.html" %}
+
+    <div class="page-container">
+        <div class="system-name-top-right">Q-TWO (M) SDN BHD FREIGHT FORWARDING SYSTEM</div>
+
+        <div class="page-shell">
+
+            <div class="page-header">
+                <h1 class="page-title">Completed Jobs Archive</h1>
+                <p class="page-subtitle">
+                    Review completed shipment jobs, search archived records, and track final workflow outcomes.
+                </p>
+            </div>
+
+            <div class="panel-card">
+                <div class="panel-head">
+                    <h2>Archive Filters</h2>
+                    <p>Search and refine archived completed jobs by company and date-related sort order.</p>
+                </div>
+
+                <div class="panel-body">
+                    <form method="GET" action="{{ url_for('completed_jobs') }}">
+                        <div class="filter-grid">
+                            <label for="search">Search</label>
+                            <input type="text" id="search" name="search" value="{{ search }}"
+                                placeholder="Job number or client">
+
+                            <label for="company">Company</label>
+                            <select name="company" id="company">
+                                <option value="">-- All Companies --</option>
+                                {% for company in companies %}
+                                <option value="{{ company.id }}" {% if company_filter==company.id|string %}selected{%
+                                    endif %}>
+                                    {{ company.company_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+
+                            <label for="sort_by">Sort By</label>
+                            <select name="sort_by" id="sort_by">
+                                <option value="">-- Latest Created --</option>
+                                <option value="etd" {% if sort_by=="etd" %}selected{% endif %}>ETD (Earliest First)
+                                </option>
+                                <option value="eta" {% if sort_by=="eta" %}selected{% endif %}>ETA (Earliest First)
+                                </option>
+                                <option value="delivery_date" {% if sort_by=="delivery_date" %}selected{% endif %}>
+                                    Delivery Date (Earliest First)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="primary-btn">Apply Filters</button>
+                            <a href="{{ url_for('completed_jobs') }}" class="secondary-link">Reset</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="panel-card">
+                <div class="panel-head">
+                    <h2>Archived Completed Jobs</h2>
+                    <p>Review completed jobs, final progress, latest notes, and archived shipment history.</p>
+                </div>
+
+                <div class="panel-body">
+                    {% if archive_data %}
+                    <div class="data-table-wrap">
+                        <table class="data-table">
+                            <tr>
+                                <th>ID</th>
+                                <th>Job Number</th>
+                                <th>Company</th>
+                                <th>Type</th>
+                                <th>Template</th>
+                                <th>Client</th>
+                                <th>Description</th>
+                                <th>Created Date</th>
+                                <th>Completed Date</th>
+                                <th>ETD</th>
+                                <th>ETA</th>
+                                <th>Delivery Date</th>
+                                <th>Progress</th>
+                                <th>Status</th>
+                                <th>Latest Step</th>
+                                <th>Latest Note</th>
+                                <th>Actions</th>
+                            </tr>
+
+                            {% for item in archive_data %}
+                            <tr class="status-completed">
+                                <td>{{ item.job.id }}</td>
+
+                                <td>
+                                    <a href="{{ url_for('job_detail', job_id=item.job.id) }}" class="job-link">
+                                        {{ format_job_number(item.job.job_number) }}
+                                    </a>
+                                </td>
+
+                                <td>{{ item.job.company.company_name if item.job.company else "" }}</td>
+                                <td>{{ item.job.job_type }}</td>
+                                <td>{{ item.job.workflow_template }}</td>
+                                <td>{{ item.job.client.name if item.job.client else "" }}</td>
+                                <td>{{ item.job.description }}</td>
+                                <td>{{ item.job.created_date.strftime('%d %b %Y') if item.job.created_date else '-' }}
+                                </td>
+                                <td>{{ item.completed_date.strftime('%d %b %Y') if item.completed_date else '-' }}</td>
+                                <td>{{ item.job.etd.strftime('%d %b %Y') if item.job.etd else '-' }}</td>
+                                <td>{{ item.job.eta.strftime('%d %b %Y') if item.job.eta else '-' }}</td>
+                                <td>{{ item.job.delivery_date.strftime('%d %b %Y') if item.job.delivery_date else '-' }}
+                                </td>
+                                <td>{{ item.completed_steps }}/{{ item.total_steps }}</td>
+                                <td><span class="status-badge">{{ item.status_icon }} {{ item.status }}</span></td>
+                                <td>{{ item.latest_step }}</td>
+                                <td>
+                                    {% if item.latest_note %}
+                                    {{ item.latest_note[:60] }}{% if item.latest_note|length > 60 %}...{% endif %}
+                                    {% else %}
+                                    -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('job_detail', job_id=item.job.id) }}"
+                                        class="table-link-btn">View</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty-box">No archived completed jobs found.</div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+
+        <div class="bottom-right-text">© 2026 By Freelance Generation</div>
+    </div>
+
+    <script>
+        function toggleNav() {
+            document.body.classList.toggle("nav-open");
+        }
+    </script>
+
+</body>
+
+</html>

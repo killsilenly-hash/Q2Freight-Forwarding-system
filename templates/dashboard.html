@@ -1,0 +1,1496 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Dashboard</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        :root {
+            --bg-main: #18293b;
+            --bg-shell: #22364d;
+            --bg-panel: #24384f;
+            --bg-panel-soft: #2a415b;
+            --bg-card: #29425e;
+            --bg-card-dark: #22364d;
+            --bg-table-head: #1d2e43;
+            --bg-table-row: #f8fbff;
+            --text-main: #ffffff;
+            --text-soft: #c9d5e2;
+            --text-muted: #9fb2c5;
+            --line-soft: rgba(255, 255, 255, 0.08);
+            --line-strong: rgba(255, 255, 255, 0.14);
+
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --critical: #e74c3c;
+            --warning: #f39c12;
+            --success: #27ae60;
+            --info: #4aa3ff;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #21344a 0%, #2f4d72 100%);
+            margin: 0;
+            color: var(--text-main);
+        }
+
+        .system-name-top-right {
+            position: absolute;
+            top: -52px;
+            right: 20px;
+            pointer-events: none;
+
+            font-family: "Segoe UI", Arial, sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            line-height: 1;
+            white-space: nowrap;
+
+            color: #9fb7d1;
+        }
+
+        .dashboard-page {
+            min-height: 100vh;
+        }
+
+        .page-container {
+            position: relative;
+            max-width: 1180px;
+            margin: 90px auto 40px auto;
+            padding: 0 20px;
+        }
+
+        .dashboard-company {
+            font-size: 13px;
+            letter-spacing: 1.5px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        .dashboard-header {
+            background: rgba(20, 33, 48, 0.60);
+            border: 1px solid var(--line-soft);
+            border-radius: 16px;
+            padding: 22px 24px;
+            margin-bottom: 22px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+            backdrop-filter: blur(6px);
+        }
+
+        .dashboard-title {
+            margin: 0;
+            font-size: 32px;
+            font-weight: bold;
+            letter-spacing: 0.2px;
+        }
+
+        .dashboard-subtitle {
+            margin: 8px 0 0 0;
+            color: var(--text-soft);
+            font-size: 15px;
+        }
+
+        .job-link {
+            font-weight: bold;
+            font-size: 14px;
+            color: #16324f;
+            text-decoration: none;
+        }
+
+        .job-link:hover {
+            text-decoration: underline;
+            color: #0b74c7;
+        }
+
+        .nav-toggle-btn {
+            position: fixed;
+            top: 18px;
+            left: 18px;
+            z-index: 1201;
+            border: none;
+            border-radius: 10px;
+            background: rgba(24, 42, 61, 0.96);
+            color: #ffffff;
+            padding: 11px 16px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .nav-toggle-btn:hover {
+            background: #2b4f75;
+        }
+
+        .nav-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 18, 28, 0.42);
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: 0.25s ease;
+            z-index: 1198;
+        }
+
+        .dashboard-page.nav-open .nav-overlay {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        .top-nav {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100vh;
+            padding-top: 72px;
+            background: linear-gradient(180deg, #132131 0%, #1d3147 100%);
+            margin: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 18px 0 40px rgba(0, 0, 0, 0.28);
+            transform: translateX(-100%);
+            transition: transform 0.25s ease;
+            z-index: 1200;
+        }
+
+        .dashboard-page.nav-open .top-nav {
+            transform: translateX(0);
+        }
+
+        .top-nav a,
+        .top-nav .dropbtn {
+            display: block;
+            width: 100%;
+            color: white;
+            text-align: left;
+            padding: 14px 20px;
+            text-decoration: none;
+            font-size: 15px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .top-nav a:hover,
+        .dropdown:hover .dropbtn {
+            background-color: rgba(52, 152, 219, 0.22);
+        }
+
+        .dropdown {
+            position: relative;
+            width: 100%;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: static;
+            background-color: rgba(255, 255, 255, 0.04);
+            min-width: 100%;
+            box-shadow: none;
+            z-index: 999;
+            border-radius: 0;
+            overflow: hidden;
+        }
+
+        .dropdown-content a {
+            color: #d9e7f4;
+            padding: 12px 20px 12px 34px;
+            text-decoration: none;
+            display: block;
+            text-align: left;
+            white-space: nowrap;
+            font-size: 14px;
+        }
+
+        .dropdown-content a:hover {
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .summary-boxes {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(220px, 1fr));
+            gap: 18px;
+            margin-bottom: 22px;
+        }
+
+        .summary-box {
+            background: linear-gradient(180deg, #2d4766 0%, #223850 100%);
+            border: 1px solid var(--line-soft);
+            border-radius: 14px;
+            padding: 18px 18px 14px 18px;
+            min-height: 118px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.16);
+            position: relative;
+            overflow: hidden;
+
+            opacity: 0.92;
+            transition: 0.2s ease;
+        }
+
+        .summary-box:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 18px 36px rgba(0, 0, 0, 0.25);
+        }
+
+        .summary-box::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 5px;
+            opacity: 0.95;
+        }
+
+        .summary-box.total::after {
+            background: var(--info);
+        }
+
+        .summary-box.not-started::after {
+            background: var(--warning);
+        }
+
+        .summary-box.in-progress::after {
+            background: var(--accent);
+        }
+
+        .summary-box.completed::after {
+            background: var(--success);
+        }
+
+        .summary-box strong {
+            display: block;
+            color: #dce7f2;
+            font-size: 14px;
+            margin-bottom: 10px;
+            font-weight: bold;
+            letter-spacing: 0.2px;
+        }
+
+        .summary-value {
+            font-size: 40px;
+            line-height: 1;
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        .summary-subtext {
+            margin-top: 10px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #aac2d8;
+        }
+
+        .alert-panel {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(280px, 1fr));
+            gap: 18px;
+            margin-bottom: 24px;
+            align-items: stretch;
+        }
+
+        .alert-box {
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            min-width: 0;
+            padding: 18px;
+            border-radius: 14px;
+            display: flex;
+            flex-direction: column;
+            min-height: 300px;
+            max-height: 360px;
+            box-shadow: 0 16px 30px rgba(0, 0, 0, 0.20);
+        }
+
+        .alert-critical {
+            background: linear-gradient(180deg, rgba(92, 22, 22, 0.96) 0%, rgba(50, 16, 22, 0.96) 100%);
+            box-shadow:
+                inset 0 0 0 1px rgba(231, 76, 60, 0.38),
+                0 16px 30px rgba(0, 0, 0, 0.22);
+
+            box-shadow:
+                inset 0 0 0 1px rgba(231, 76, 60, 0.6),
+                0 0 18px rgba(231, 76, 60, 0.25),
+                0 16px 30px rgba(0, 0, 0, 0.22);
+        }
+
+        .alert-today {
+            background: linear-gradient(180deg, rgba(112, 62, 10, 0.94) 0%, rgba(59, 35, 10, 0.94) 100%);
+            box-shadow:
+                inset 0 0 0 1px rgba(243, 156, 18, 0.34),
+                0 16px 30px rgba(0, 0, 0, 0.22);
+        }
+
+        .alert-upcoming {
+            background: linear-gradient(180deg, rgba(111, 82, 10, 0.92) 0%, rgba(55, 45, 12, 0.92) 100%);
+            box-shadow:
+                inset 0 0 0 1px rgba(241, 196, 15, 0.34),
+                0 16px 30px rgba(0, 0, 0, 0.22);
+        }
+
+        .alert-box h2 {
+            margin: 0 0 8px 0;
+            font-size: 21px;
+            color: #ffffff;
+        }
+
+        .alert-box .alert-desc {
+            margin: 0 0 14px 0;
+            color: rgba(255, 255, 255, 0.84);
+            font-size: 14px;
+        }
+
+        .alert-list {
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .alert-item {
+            margin-bottom: 10px;
+            padding: 12px 13px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            background: rgba(255, 255, 255, 0.10);
+            transition: 0.18s ease;
+        }
+
+        .alert-item:hover {
+            background: rgba(255, 255, 255, 0.17);
+            transform: translateY(-2px);
+        }
+
+        .alert-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .alert-job-number {
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .alert-job-number a {
+            text-decoration: none;
+            font-weight: bold;
+            color: #ffffff;
+            display: inline-block;
+            padding: 2px 0;
+        }
+
+        .alert-job-number a:hover {
+            text-decoration: underline;
+            color: #ffffff;
+        }
+
+        .alert-meta {
+            color: #f0f5fa;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .alert-date {
+            color: rgba(255, 255, 255, 0.82);
+            font-size: 13px;
+        }
+
+        .alert-empty {
+            color: #eef3f8;
+            font-style: italic;
+            margin-top: 12px;
+            text-align: center;
+            padding: 24px 10px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+        }
+
+        .filter-box {
+            margin-bottom: 24px;
+            padding: 22px;
+            border: 1px solid var(--line-soft);
+            background: linear-gradient(180deg, rgba(22, 35, 50, 0.78) 0%, rgba(37, 57, 80, 0.82) 100%);
+            border-radius: 14px;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+
+            border-left: 4px solid rgba(52, 152, 219, 0.6);
+        }
+
+        .filter-box h2 {
+            margin: 0 0 8px 0;
+            font-size: 24px;
+            color: #ffffff;
+        }
+
+        .filter-box .filter-subtext {
+            margin: 0 0 18px 0;
+            color: var(--text-soft);
+            font-size: 14px;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(220px, 1fr));
+            gap: 14px 16px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-box label {
+            font-weight: bold;
+            color: #dce7f2;
+            margin-bottom: 7px;
+            font-size: 14px;
+        }
+
+        .filter-box input,
+        .filter-box select {
+            padding: 10px 12px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            border-radius: 10px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.10);
+            color: #ffffff;
+            outline: none;
+        }
+
+        .filter-box input::placeholder {
+            color: #c7d7e6;
+        }
+
+        .filter-box option {
+            color: #1f2d3a;
+        }
+
+        .filter-box input:focus,
+        .filter-box select:focus {
+            border-color: #5bb5ff;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.18);
+        }
+
+        .filter-actions {
+            margin-top: 18px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-box button,
+        .filter-link {
+            padding: 11px 16px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.16s ease;
+        }
+
+        .filter-box button {
+            border: none;
+            background-color: var(--accent);
+            color: white;
+        }
+
+        .filter-box button:hover {
+            background-color: #2387cf;
+            transform: translateY(-1px);
+        }
+
+        .filter-link {
+            display: inline-block;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            background-color: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+        }
+
+        .filter-link:hover {
+            background-color: rgba(255, 255, 255, 0.14);
+        }
+
+        .section-header {
+            margin-top: 28px;
+            margin-bottom: 14px;
+        }
+
+        .section-header h2 {
+            margin: 0 0 6px 0;
+            font-size: 26px;
+            color: #ffffff;
+        }
+
+        .section-header p {
+            margin: 0;
+            color: var(--text-soft);
+            font-size: 14px;
+        }
+
+        .table-section {
+            margin-top: 0;
+            background: rgba(15, 25, 37, 0.78);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 14px;
+            box-shadow: 0 14px 34px rgba(0, 0, 0, 0.18);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 18px 20px 14px 20px;
+            border-bottom: 1px solid var(--line-soft);
+            background: linear-gradient(180deg, rgba(33, 52, 74, 0.94) 0%, rgba(27, 43, 62, 0.94) 100%);
+        }
+
+        .table-header h2 {
+            margin: 0 0 6px 0;
+            color: #ffffff;
+            font-size: 24px;
+        }
+
+        .table-header p {
+            margin: 0;
+            color: var(--text-soft);
+            font-size: 14px;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        .table-section table {
+            margin: 0;
+            min-width: 1400px;
+        }
+
+        th,
+        td {
+            padding: 13px 10px;
+            text-align: left;
+            vertical-align: top;
+            border-bottom: 1px solid #d8e3ee;
+        }
+
+        .table-section th {
+            background-color: #edf4fb;
+            color: #1f3247;
+            font-weight: bold;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            border-bottom: 1px solid #d6e2ee;
+        }
+
+        .table-section td {
+            line-height: 1.45;
+            background-color: #ffffff;
+            color: #203247;
+        }
+
+        .status-not-started td {
+            background-color: #fff6df;
+        }
+
+        .status-in-progress td {
+            background-color: #eef6ff;
+        }
+
+        .status-completed td {
+            background-color: #edf9f1;
+        }
+
+        .status-no-workflow td {
+            background-color: #f1f4f7;
+        }
+
+        .table-section tr:hover td {
+            background-color: #dfeeff;
+            transition: background-color 0.15s ease;
+        }
+
+        .date-overdue {
+            color: #d93025;
+            font-weight: bold;
+        }
+
+        .date-warning {
+            font-size: 12px;
+            display: block;
+            margin-top: 4px;
+            color: #c62828;
+            font-weight: bold;
+        }
+
+        @media (max-width: 1200px) {
+
+            .summary-boxes,
+            .alert-panel,
+            .filter-grid {
+                grid-template-columns: repeat(2, minmax(220px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .page-container {
+                padding: 0 14px;
+                margin-top: 80px;
+            }
+
+            .system-name-top-right,
+            .bottom-right-text {
+                position: static;
+                display: block;
+                margin-bottom: 12px;
+                text-align: right;
+            }
+
+            .dashboard-title {
+                font-size: 26px;
+            }
+
+            .summary-boxes,
+            .alert-panel,
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-actions {
+                flex-direction: column;
+            }
+
+            .filter-box button,
+            .filter-link {
+                width: 100%;
+                text-align: center;
+            }
+
+            .top-nav {
+                width: 250px;
+            }
+        }
+
+        .dashboard-shell {
+            background: linear-gradient(180deg, rgba(18, 30, 44, 0.82) 0%, rgba(29, 48, 69, 0.72) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            border-radius: 18px;
+            padding: 22px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(4px);
+        }
+
+        /* spacing between sections */
+        .alert-panel,
+        .summary-boxes,
+        .filter-box,
+        .table-section {
+            margin-bottom: 22px;
+        }
+
+        /* stronger separation feel */
+        .filter-box {
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .table-section {
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .activity-panel {
+            margin-bottom: 22px;
+            background: linear-gradient(180deg, rgba(22, 35, 50, 0.78) 0%, rgba(37, 57, 80, 0.82) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 14px;
+            box-shadow: 0 14px 34px rgba(0, 0, 0, 0.18);
+            overflow: hidden;
+        }
+
+        .activity-header {
+            padding: 18px 20px 14px 20px;
+            border-bottom: 1px solid var(--line-soft);
+            background: linear-gradient(180deg, rgba(33, 52, 74, 0.94) 0%, rgba(27, 43, 62, 0.94) 100%);
+        }
+
+        .activity-header h2 {
+            margin: 0 0 6px 0;
+            color: #ffffff;
+            font-size: 24px;
+        }
+
+        .activity-header p {
+            margin: 0;
+            color: var(--text-soft);
+            font-size: 14px;
+        }
+
+        .activity-list {
+            padding: 14px 16px 16px 16px;
+        }
+
+        .activity-item {
+            padding: 12px 14px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            background: #fdf8f0;
+            border: 1px solid #eee3d3;
+            border-left: 6px solid transparent;
+        }
+
+        /* LEFT COLOR BAR */
+        .activity-item {
+            border-left: 6px solid transparent;
+        }
+
+        /* TYPE COLORS */
+        .activity-job {
+            border-left-color: #3498db;
+            /* blue */
+        }
+
+        .activity-client {
+            border-left-color: #27ae60;
+            /* green */
+        }
+
+        .activity-company {
+            border-left-color: #9b59b6;
+            /* purple */
+        }
+
+        .activity-delete_request {
+            border-left-color: #e74c3c;
+            /* red */
+        }
+
+        .activity-other {
+            border-left-color: #7f8c8d;
+            /* grey */
+        }
+
+        .activity-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+        }
+
+        .activity-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .activity-main {
+            color: #2c3e50;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 4px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .activity-meta {
+            color: #0b74c7;
+            font-size: 13px;
+        }
+
+        .activity-link {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .activity-link:hover {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .activity-job {
+            border-left-color: #3498db;
+        }
+
+        .activity-client {
+            border-left-color: #27ae60;
+        }
+
+        .activity-company {
+            border-left-color: #9b59b6;
+        }
+
+        .activity-delete_request {
+            border-left-color: #e74c3c;
+        }
+
+        .activity-other {
+            border-left-color: #7f8c8d;
+        }
+
+        .activity-empty {
+            color: #eef3f8;
+            font-style: italic;
+            text-align: center;
+            padding: 24px 10px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+        }
+
+        .activity-link {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .bottom-right-text {
+            position: absolute;
+            bottom: -30px;
+            right: 24px;
+            pointer-events: none;
+            z-index: 9999;
+            font-family: "Segoe UI", Arial, sans-serif;
+            font-size: 10px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.6);
+        }
+    </style>
+
+
+</head>
+
+<body class="dashboard-page">
+
+    <button class="nav-toggle-btn" id="navToggleBtn" type="button">☰ Menu</button>
+    <div class="nav-overlay" id="navOverlay"></div>
+
+    {% include "navbar.html" %}
+
+    <div class="page-container">
+        <div class="system-name-top-right">Q-TWO (M) SDN BHD FREIGHT FORWARDING SYSTEM</div>
+
+        <div class="dashboard-shell">
+
+            <div class="dashboard-header">
+
+
+
+                <h1 class="dashboard-title">Dashboard</h1>
+
+            </div>
+
+            <div class="alert-panel">
+
+                <div class="alert-box alert-critical">
+                    <h2>🔴 Overdue Alerts ({{ critical_alerts|length }})</h2>
+                    <p class="alert-desc">
+                        Immediate attention required
+                    </p>
+
+                    <div class="alert-list">
+                        {% if critical_alerts %}
+                        {% for alert in critical_alerts %}
+                        <div class="alert-item">
+                            <div class="alert-job-number">
+                                <a href="{{ url_for('job_detail', job_id=alert.job_id) }}">
+                                    {{ format_job_number(alert.job_number) }}
+                                </a>
+                            </div>
+                            <div class="alert-meta">{{ alert.client_name }}</div>
+                            <div class="alert-date">{{ alert.alert_type }} — {{ alert.alert_date }}</div>
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="alert-empty">No overdue alerts.</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+
+                <div class="alert-box alert-today">
+                    <h2>🟠 Due Today ({{ today_alerts|length }})</h2>
+                    <p class="alert-desc">
+                        Tasks due today
+                    </p>
+
+                    <div class="alert-list">
+                        {% if today_alerts %}
+                        {% for alert in today_alerts %}
+                        <div class="alert-item">
+                            <div class="alert-job-number">
+                                <a href="{{ url_for('job_detail', job_id=alert.job_id) }}">
+                                    {{ format_job_number(alert.job_number) }}
+                                </a>
+                            </div>
+                            <div class="alert-meta">{{ alert.client_name }}</div>
+                            <div class="alert-date">{{ alert.alert_type }} — {{ alert.alert_date }}</div>
+                        </div>
+
+                        {% endfor %}
+                        {% else %}
+                        <div class="alert-empty">No jobs due today.</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="alert-box alert-upcoming">
+                    <h2>🟡 Due in Next 2 Days ({{ upcoming_alerts|length }})</h2>
+                    <p class="alert-desc">
+                        Upcoming in next 2 days
+                    </p>
+
+                    <div class="alert-list">
+                        {% if upcoming_alerts %}
+                        {% for alert in upcoming_alerts %}
+                        <div class="alert-item">
+                            <div class="alert-job-number">
+                                <a href="{{ url_for('job_detail', job_id=alert.job_id) }}">
+                                    {{ format_job_number(alert.job_number) }}
+                                </a>
+                            </div>
+                            <div class="alert-meta">{{ alert.client_name }}</div>
+                            <div class="alert-date">{{ alert.alert_type }} — {{ alert.alert_date }}</div>
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="alert-empty">No upcoming alerts in next 2 days.</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="section-header">
+                <h2>Dashboard Summary</h2>
+                <p>Get a quick overview of total jobs and current workflow status.</p>
+            </div>
+
+
+            <div class="summary-boxes">
+                <div class="summary-box total">
+                    <strong>Total Jobs</strong>
+                    <div class="summary-value">{{ total_jobs }}</div>
+                    <div class="summary-subtext">All records</div>
+                </div>
+
+                <div class="summary-box not-started">
+                    <strong>Not Started</strong>
+                    <div class="summary-value">{{ not_started_jobs }}</div>
+                    <div class="summary-subtext">Waiting action</div>
+                </div>
+
+                <div class="summary-box in-progress">
+                    <strong>In Progress</strong>
+                    <div class="summary-value">{{ in_progress_jobs }}</div>
+                    <div class="summary-subtext">Operational work</div>
+                </div>
+
+                <div class="summary-box completed">
+                    <strong>Completed</strong>
+                    <div class="summary-value">{{ completed_jobs }}</div>
+                    <div class="summary-subtext">Finished jobs</div>
+                </div>
+
+                {% if current_user and current_user.role == "admin" %}
+                <a href="{{ url_for('account_requests') }}" class="summary-box"
+                    style="text-decoration:none; background: linear-gradient(180deg, #7d3c98 0%, #5b2c6f 100%);">
+                    <strong>Pending Account Requests</strong>
+                    <div class="summary-value">{{ pending_account_requests }}</div>
+                    <div class="summary-subtext">Admin review needed</div>
+                </a>
+
+                <a href="{{ url_for('delete_requests') }}" class="summary-box"
+                    style="text-decoration:none; background: linear-gradient(180deg, #922b21 0%, #641e16 100%);">
+                    <strong>Pending Delete Requests</strong>
+                    <div class="summary-value">{{ pending_delete_requests }}</div>
+                    <div class="summary-subtext">Approval queue</div>
+                </a>
+                {% endif %}
+            </div>
+
+            {% if current_user and current_user.role == "admin" %}
+
+
+            <div class="activity-panel">
+                <div class="activity-header">
+                    <h2>Recent Activity</h2>
+                    <p>Latest recorded actions across jobs, master data, and approval flow.</p>
+
+                    <div style="margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                        <select id="activityFilter" style="padding:8px 10px; border-radius:8px;">
+                            <option value="all">All</option>
+                            <option value="job">Jobs</option>
+                            <option value="client">Clients</option>
+                            <option value="company">Companies</option>
+                            <option value="delete_request">Deletes</option>
+                        </select>
+
+                        <button id="clearActivityFilter" style="padding:8px 10px; border-radius:8px;">
+                            Clear
+                        </button>
+                    </div>
+                </div>
+                <div style="text-align:center; margin-top:10px;">
+                    <button id="toggleActivityBtn" class="section-btn" onclick="toggleActivity()">
+                        Show More
+                    </button>
+                </div>
+
+                <div class="activity-list">
+                    {% if recent_audit_logs %}
+                    {% for log in recent_audit_logs %}
+                    <div class="activity-item activity-{{ log.item_type if log.item_type else 'other' }} {% if loop.index > 5 %}extra-activity{% endif %}"
+                        data-type="{{ log.item_type if log.item_type else 'other' }}" {% if loop.index> 5
+                        %}style="display:none;"{% endif %}>
+
+                        {% if log.item_type == "job" %}
+                        <a href="{{ url_for('job_detail', job_id=log.item_id) }}" class="activity-link">
+
+                            {% elif log.item_type == "client" %}
+                            <a href="{{ url_for('edit_client', client_id=log.item_id) }}" class="activity-link">
+
+                                {% elif log.item_type == "company" %}
+                                <a href="{{ url_for('edit_company', company_id=log.item_id) }}" class="activity-link">
+
+                                    {% else %}
+                                    <div class="activity-link">
+                                        {% endif %}
+
+                                        <div class="activity-main">
+
+                                            {% if log.item_type == "job" %}
+                                            📦
+                                            {% elif log.item_type == "client" %}
+                                            👤
+                                            {% elif log.item_type == "company" %}
+                                            🏢
+                                            {% elif log.item_type == "delete_request" %}
+                                            ⚠️
+                                            {% else %}
+                                            📝
+                                            {% endif %}
+
+                                            {{ log.details if log.details else log.action }}
+
+                                        </div>
+
+                                        <div class="activity-meta">
+                                            {{ log.user.username if log.user else 'System' }}
+                                            • {{ log.action }}
+                                            • {{ log.created_at.strftime('%d %b %Y %H:%M') if log.created_at else '-' }}
+                                        </div>
+
+                                        {% if log.item_type in ["job", "client", "company"] %}
+                                </a>
+                                {% else %}
+                    </div>
+                    {% endif %}
+
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="activity-empty">No recent activity found.</div>
+                {% endif %}
+            </div>
+
+            <div style="text-align:center; padding: 0 0 16px 0;">
+                <button id="toggleActivityBtn" class="section-btn" onclick="toggleActivity()">
+                    Show More
+                </button>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="filter-box">
+            <h2>Filter Jobs</h2>
+            <p class="filter-subtext">
+                Narrow the dashboard view by company, status, workflow, dates, and priority.
+            </p>
+
+            <form method="GET" action="/">
+                <div class="filter-grid">
+
+                    <div class="filter-group">
+                        <label>Search</label>
+                        <input type="text" name="search" value="{{ search }}" placeholder="Job number or client">
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Company</label>
+                        <select name="company">
+                            <option value="">-- All Companies --</option>
+                            {% for company in companies %}
+                            <option value="{{ company.id }}" {% if company_filter==company.id|string %}selected{% endif
+                                %}>
+                                {{ company.company_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Status</label>
+                        <select name="status">
+                            <option value="">-- All Status --</option>
+                            <option value="Not started" {% if status_filter=="Not started" %}selected{% endif %}>Not
+                                started
+                            </option>
+                            <option value="In progress" {% if status_filter=="In progress" %}selected{% endif %}>In
+                                progress
+                            </option>
+                            <option value="Completed" {% if status_filter=="Completed" %}selected{% endif %}>
+                                Completed
+                            </option>
+                            <option value="No workflow" {% if status_filter=="No workflow" %}selected{% endif %}>No
+                                workflow
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Priority</label>
+                        <select name="priority">
+                            <option value="">-- All Priority --</option>
+                            <option value="Critical" {% if priority_filter=="Critical" %}selected{% endif %}>
+                                Critical
+                            </option>
+                            <option value="Urgent" {% if priority_filter=="Urgent" %}selected{% endif %}>Urgent
+                            </option>
+                            <option value="Normal" {% if priority_filter=="Normal" %}selected{% endif %}>Normal
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Template</label>
+                        <select name="template">
+                            <option value="">-- All Templates --</option>
+                            {% for template in workflow_templates %}
+                            <option value="{{ template }}" {% if template_filter==template %}selected{% endif %}>
+                                {{ template }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Completion</label>
+                        <select name="completion">
+                            <option value="">-- All Completion --</option>
+                            <option value="active" {% if completion_filter=="active" %}selected{% endif %}>
+                                Active
+                                Only
+                            </option>
+                            <option value="completed" {% if completion_filter=="completed" %}selected{% endif %}>
+                                Completed
+                                Only
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Sort By</label>
+                        <select name="sort_by">
+                            <option value="">-- Latest Created --</option>
+                            <option value="etd" {% if sort_by=="etd" %}selected{% endif %}>ETD (Earliest First)
+                            </option>
+                            <option value="eta" {% if sort_by=="eta" %}selected{% endif %}>ETA (Earliest First)
+                            </option>
+                            <option value="delivery_date" {% if sort_by=="delivery_date" %}selected{% endif %}>
+                                Delivery
+                                Date
+                                (Earliest First)</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Overdue</label>
+                        <select name="overdue">
+                            <option value="">-- All Jobs --</option>
+                            <option value="yes" {% if overdue_filter=="yes" %}selected{% endif %}>Overdue Only
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>This Week</label>
+                        <select name="week_filter">
+                            <option value="">-- All Dates --</option>
+                            <option value="etd" {% if week_filter=="etd" %}selected{% endif %}>ETD This Week
+                            </option>
+                            <option value="eta" {% if week_filter=="eta" %}selected{% endif %}>ETA This Week
+                            </option>
+                            <option value="delivery" {% if week_filter=="delivery" %}selected{% endif %}>
+                                Delivery
+                                This
+                                Week
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="filter-actions">
+                    <button type="submit">Apply Filters</button>
+
+                    <a class="filter-link" href="/">Reset</a>
+
+                    <a class="filter-link" href="{{ url_for('export_jobs',
+                    search=search,
+                    company=company_filter,
+                    status=status_filter,
+                    priority=priority_filter,
+                    template=template_filter,
+                    completion=completion_filter,
+                    sort_by=sort_by,
+                    overdue=overdue_filter,
+                    week_filter=week_filter
+           ) }}">Export to Excel</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="table-section">
+            <div class="table-header">
+                <h2>Job List</h2>
+                <p>Click the job number to open the full job detail page.</p>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <tr>
+                        <th>ID</th>
+                        <th>Job Number</th>
+                        <th>Company</th>
+                        <th>Type</th>
+                        <th>Job Type</th>
+                        <th>Client</th>
+                        <th>Description</th>
+                        <th>Created Date</th>
+                        <th>Completed Date</th>
+                        <th>ETD</th>
+                        <th>ETA</th>
+                        <th>Delivery Date</th>
+                        <th>Progress</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Latest Step</th>
+                        <th>Next Step</th>
+                        <th>Latest Note</th>
+                    </tr>
+
+                    {% for item in dashboard_data %}
+                    {% if item.status == "Not started" %}
+                    {% set row_class = "status-not-started" %}
+                    {% elif item.status == "Completed" %}
+                    {% set row_class = "status-completed" %}
+                    {% elif item.status == "No workflow" %}
+                    {% set row_class = "status-no-workflow" %}
+                    {% else %}
+                    {% set row_class = "status-in-progress" %}
+                    {% endif %}
+
+                    <tr class="{{ row_class }}">
+                        <td>{{ item.job.id }}</td>
+
+                        <td>
+                            <a class="job-link" href="{{ url_for('job_detail', job_id=item.job.id) }}">
+                                {{ format_job_number(item.job.job_number) }}
+                            </a>
+                        </td>
+
+                        <td>{{ item.job.company.company_name if item.job.company else "" }}</td>
+                        <td>{{ item.job.job_type }}</td>
+                        <td>{{ item.job.workflow_template }}</td>
+                        <td>{{ item.job.client.name if item.job.client else "" }}</td>
+                        <td>{{ item.job.description }}</td>
+
+                        <td>{{ item.job.created_date.strftime('%d %b %Y') if item.job.created_date else '-' }}
+                        </td>
+
+                        <td>
+                            {% if item.completed_date %}
+                            {{ item.completed_date.strftime('%d %b %Y') }}
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if item.job.etd %}
+                            <span class="{% if item.etd_overdue %}date-overdue{% endif %}">
+                                {{ item.job.etd.strftime('%d %b %Y') }}
+                            </span>
+                            {% if item.etd_overdue %}
+                            <span class="date-warning">Overdue ETD</span>
+                            {% endif %}
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if item.job.eta %}
+                            <span class="{% if item.eta_overdue %}date-overdue{% endif %}">
+                                {{ item.job.eta.strftime('%d %b %Y') }}
+                            </span>
+                            {% if item.eta_overdue %}
+                            <span class="date-warning">Overdue ETA</span>
+                            {% endif %}
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if item.job.delivery_date %}
+                            <span class="{% if item.delivery_overdue %}date-overdue{% endif %}">
+                                {{ item.job.delivery_date.strftime('%d %b %Y') }}
+                            </span>
+                            {% if item.delivery_overdue %}
+                            <span class="date-warning">Overdue Delivery</span>
+                            {% endif %}
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+
+                        <td>{{ item.completed_steps }}/{{ item.total_steps }}</td>
+                        <td>{{ item.priority_icon }} {{ item.priority }}</td>
+                        <td>{{ item.status_icon }} {{ item.status }}</td>
+                        <td>{{ item.latest_step }}</td>
+                        <td>{{ item.next_step }}</td>
+
+                        <td>
+                            {% if item.latest_note %}
+                            {{ item.latest_note[:60] }}{% if item.latest_note|length > 60 %}...{% endif %}
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+        <div class="bottom-right-text">© 2026 Freelance Generation</div>
+
+    </div>
+
+    <script>
+        const navToggleBtn = document.getElementById("navToggleBtn");
+        const activityFilter = document.getElementById("activityFilter");
+        const clearActivityFilterBtn = document.getElementById("clearActivityFilter");
+
+        function toggleActivity() {
+            const extraItems = document.querySelectorAll(".extra-activity");
+            const btn = document.getElementById("toggleActivityBtn");
+            const shouldShow = btn.innerText === "Show More";
+
+            extraItems.forEach(item => {
+                const type = item.getAttribute("data-type");
+                const selected = activityFilter ? activityFilter.value : "all";
+
+                if (selected === "all") {
+                    item.style.display = shouldShow ? "block" : "none";
+                } else {
+                    if (selected === type) {
+                        item.style.display = "block";
+                    }
+                }
+            });
+
+            btn.innerText = shouldShow ? "Show Less" : "Show More";
+        }
+
+
+        function applyActivityFilter(selected) {
+            const items = document.querySelectorAll(".activity-item");
+            const toggleBtn = document.getElementById("toggleActivityBtn");
+
+            items.forEach((item, index) => {
+                const type = item.getAttribute("data-type");
+                const matchesFilter = (selected === "all" || type === selected);
+
+                if (!matchesFilter) {
+                    item.style.display = "none";
+                    return;
+                }
+
+                if (selected === "all") {
+                    if (item.classList.contains("extra-activity")) {
+                        item.style.display = "none";
+                    } else {
+                        item.style.display = "block";
+                    }
+
+                    if (toggleBtn) {
+                        toggleBtn.innerText = "Show More";
+                    }
+                } else {
+                    item.style.display = "block";
+
+                    if (toggleBtn) {
+                        toggleBtn.innerText = "Show Less";
+                    }
+                }
+            });
+        }
+
+        if (activityFilter) {
+            const savedActivityFilter = localStorage.getItem("dashboardActivityFilter") || "all";
+
+            activityFilter.value = savedActivityFilter;
+            applyActivityFilter(savedActivityFilter);
+
+            activityFilter.addEventListener("change", function () {
+                if (clearActivityFilterBtn && activityFilter) {
+                    clearActivityFilterBtn.addEventListener("click", function () {
+                        localStorage.removeItem("dashboardActivityFilter");
+                        activityFilter.value = "all";
+                        applyActivityFilter("all");
+                    });
+                }
+                const selected = this.value;
+                localStorage.setItem("dashboardActivityFilter", selected);
+                applyActivityFilter(selected);
+            });
+        }
+        const navOverlay = document.getElementById("navOverlay");
+
+        if (navToggleBtn) {
+            navToggleBtn.addEventListener("click", function () {
+                document.body.classList.toggle("nav-open");
+            });
+        }
+
+        if (navOverlay) {
+            navOverlay.addEventListener("click", function () {
+                document.body.classList.remove("nav-open");
+            });
+        }
+
+    </script>
+
+</body>
+
+</html>

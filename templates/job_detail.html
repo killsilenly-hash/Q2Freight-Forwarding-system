@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Job Detail</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        :root {
+            --bg-main: #18293b;
+            --bg-shell: #22364d;
+            --bg-panel: #24384f;
+            --bg-panel-soft: #2a415b;
+            --bg-card: #29425e;
+            --bg-card-dark: #22364d;
+            --bg-table-head: #1d2e43;
+            --bg-table-row: #f8fbff;
+
+            --text-main: #ffffff;
+            --text-soft: #c9d5e2;
+            --text-muted: #9fb2c5;
+
+            --line-soft: rgba(255, 255, 255, 0.08);
+            --line-strong: rgba(255, 255, 255, 0.14);
+
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --critical: #e74c3c;
+            --warning: #f39c12;
+            --success: #27ae60;
+            --info: #4aa3ff;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #21344a 0%, #2f4d72 100%);
+            margin: 0;
+            color: var(--text-main);
+        }
+
+
+        .top-nav {
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100vh;
+            padding-top: 72px;
+            background: linear-gradient(180deg, #132131 0%, #1d3147 100%);
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 18px 0 40px rgba(0, 0, 0, 0.28);
+            transform: translateX(-100%);
+            transition: transform 0.25s ease;
+            z-index: 1200;
+        }
+
+        .job-detail-page.nav-open .top-nav {
+            transform: translateX(0);
+        }
+
+
+        .job-detail-page {
+            min-height: 100vh;
+        }
+
+        .page-container {
+            position: relative;
+            max-width: 1180px;
+            margin: 90px auto 40px auto;
+            padding: 0 20px;
+        }
+
+        .system-name-top-right {
+            position: absolute;
+            top: -52px;
+            right: 20px;
+            pointer-events: none;
+
+            font-family: "Segoe UI", Arial, sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            line-height: 1;
+            white-space: nowrap;
+
+            color: #9fb7d1;
+        }
+
+        .page-shell {
+            background: rgba(15, 25, 37, 0.28);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 22px;
+            padding: 22px;
+            box-shadow: 0 18px 46px rgba(0, 0, 0, 0.18);
+            backdrop-filter: blur(4px);
+        }
+
+        .breadcrumb-bar {
+            margin-bottom: 18px;
+            color: rgba(255, 255, 255, 0.86);
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .breadcrumb-link {
+            color: rgba(255, 255, 255, 0.92);
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .breadcrumb-link:hover {
+            text-decoration: underline;
+        }
+
+        .breadcrumb-sep {
+            color: rgba(255, 255, 255, 0.45);
+        }
+
+        .dashboard-company {
+            font-size: 13px;
+            letter-spacing: 1.5px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        .page-header {
+            background: rgba(20, 33, 48, 0.60);
+            border: 1px solid var(--line-soft);
+            border-radius: 16px;
+            padding: 22px 24px;
+            margin-bottom: 22px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+            backdrop-filter: blur(6px);
+        }
+
+        .page-title {
+            margin: 0;
+            font-size: 32px;
+            font-weight: bold;
+            letter-spacing: 0.2px;
+        }
+
+        .page-subtitle {
+            margin: 8px 0 0 0;
+            color: var(--text-soft);
+            font-size: 15px;
+        }
+
+        #toast-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+        }
+
+        .toast-box {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 18px 28px;
+            border-radius: 10px;
+            border: 1px solid #c3e6cb;
+            font-weight: bold;
+            font-size: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            text-align: center;
+            min-width: 300px;
+            opacity: 0;
+            animation: fadeInOut 3s ease forwards;
+        }
+
+        @keyframes fadeInOut {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -60%);
+            }
+
+            10% {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+
+            90% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -40%);
+            }
+        }
+
+        .hero-panel {
+            margin-bottom: 24px;
+            background: linear-gradient(180deg, rgba(22, 35, 50, 0.82) 0%, rgba(37, 57, 80, 0.84) 100%);
+            border: 1px solid var(--line-soft);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 16px 34px rgba(0, 0, 0, 0.20);
+        }
+
+        .hero-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            padding: 18px 22px;
+            border-bottom: 1px solid var(--line-soft);
+        }
+
+        .hero-head h2 {
+            margin: 0;
+            font-size: 24px;
+            color: #ffffff;
+        }
+
+        .hero-edit-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 18px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: bold;
+            background: #a8d7fb;
+            color: #16324f;
+            border: none;
+            white-space: nowrap;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.14);
+        }
+
+        .hero-edit-btn:hover {
+            background: #92cdfa;
+        }
+
+        .hero-body {
+            padding: 18px 22px 22px 22px;
+        }
+
+        .hero-main-card {
+            background: linear-gradient(180deg, rgba(29, 45, 64, 0.94) 0%, rgba(24, 38, 56, 0.94) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03), 0 12px 24px rgba(0, 0, 0, 0.18);
+            overflow: hidden;
+        }
+
+        .hero-top-line {
+            padding: 20px 24px 16px 24px;
+            font-size: 21px;
+            font-weight: bold;
+            color: #ffffff;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            line-height: 1.5;
+        }
+
+        .hero-meta-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(160px, 1fr));
+        }
+
+        .hero-meta-item {
+            padding: 16px 24px 18px 24px;
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .hero-meta-item:last-child {
+            border-right: none;
+        }
+
+        .hero-meta-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+        }
+
+        .hero-meta-value {
+            font-size: 18px;
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .stack {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .panel-card {
+            background: linear-gradient(180deg, rgba(22, 35, 50, 0.78) 0%, rgba(37, 57, 80, 0.82) 100%);
+            border: 1px solid var(--line-soft);
+            border-radius: 16px;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+            overflow: hidden;
+        }
+
+        .panel-head {
+            padding: 16px 20px 14px 20px;
+            border-bottom: 1px solid var(--line-soft);
+        }
+
+        .panel-head h2 {
+            margin: 0;
+            font-size: 21px;
+            color: #ffffff;
+        }
+
+        .panel-head p {
+            margin: 8px 0 0 0;
+            color: var(--text-soft);
+            font-size: 14px;
+        }
+
+        .panel-body {
+            padding: 18px 20px 20px 20px;
+        }
+
+        .summary-boxes {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(120px, 1fr));
+            gap: 14px;
+        }
+
+        .summary-box {
+            background: linear-gradient(180deg, #2d4766 0%, #223850 100%);
+            border: 1px solid var(--line-soft);
+            border-radius: 14px;
+            padding: 16px 16px 14px 16px;
+            min-height: 112px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.16);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .summary-box::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 5px;
+            opacity: 0.95;
+        }
+
+        .summary-box.total::after {
+            background: var(--info);
+        }
+
+        .summary-box.completed::after {
+            background: var(--success);
+        }
+
+        .summary-box.remaining::after {
+            background: var(--warning);
+        }
+
+        .summary-box.status::after {
+            background: var(--accent);
+        }
+
+        .summary-box strong {
+            display: block;
+            color: #dce7f2;
+            font-size: 14px;
+            margin-bottom: 10px;
+            font-weight: bold;
+            letter-spacing: 0.2px;
+        }
+
+        .summary-value {
+            font-size: 28px;
+            line-height: 1.1;
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        /* Special handling for Status box */
+        .summary-box.status .summary-value {
+            font-size: 18px;
+            line-height: 1.3;
+        }
+
+        .job-info-toggle-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .section-btn,
+        .danger-btn,
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 11px 16px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.16s ease;
+        }
+
+        .section-btn {
+            border: none;
+            background-color: var(--accent);
+            color: white;
+        }
+
+        .section-btn:hover {
+            background-color: #2387cf;
+            transform: translateY(-1px);
+        }
+
+        .back-link {
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            background-color: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+        }
+
+        .back-link:hover {
+            background-color: rgba(255, 255, 255, 0.14);
+        }
+
+        .danger-btn {
+            border: none;
+            background-color: #c0392b;
+            color: white;
+        }
+
+        .danger-btn:hover {
+            background-color: #a93226;
+        }
+
+        .detail-table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        .detail-table th,
+        .detail-table td,
+        .shipment-table th,
+        .shipment-table td,
+        .notes-table th,
+        .notes-table td {
+            padding: 12px 12px;
+            text-align: left;
+            vertical-align: top;
+            border-bottom: 1px solid #d8e3ee;
+        }
+
+        .detail-table,
+        .shipment-table,
+        .notes-table {
+            width: 100%;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .detail-table th,
+        .shipment-table th,
+        .notes-table th {
+            background-color: #edf4fb;
+            color: #1f3247;
+            font-weight: bold;
+            width: 220px;
+            white-space: nowrap;
+        }
+
+        .detail-table td,
+        .shipment-table td,
+        .notes-table td {
+            background-color: #ffffff;
+            color: #203247;
+            line-height: 1.5;
+        }
+
+        .shipment-table input[type="date"] {
+            padding: 10px 12px;
+            border: 1px solid #cfd8e3;
+            border-radius: 8px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            width: 100%;
+            max-width: 240px;
+            box-sizing: border-box;
+            color: #203247;
+            background: #ffffff;
+        }
+
+        .shipment-table input[type="date"]:focus,
+        .notes-form textarea:focus {
+            outline: none;
+            border-color: #5bb5ff;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.18);
+        }
+
+        .form-action-row {
+            margin-top: 16px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .workflow-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .workflow-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 18px;
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+            border: 1px solid #d7e0ea;
+            background-color: #ffffff;
+        }
+
+        .workflow-left {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .workflow-step-no {
+            min-width: 42px;
+            height: 42px;
+            line-height: 42px;
+            text-align: center;
+            border-radius: 50%;
+            background-color: #ecf0f1;
+            color: #2c3e50;
+            font-weight: bold;
+            font-size: 15px;
+            border: 1px solid #cfd8dc;
+        }
+
+        .workflow-step-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .workflow-step-name {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 6px;
+            color: #2c3e50;
+        }
+
+        .workflow-step-meta {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .workflow-right form {
+            margin: 0;
+        }
+
+        .workflow-right button {
+            padding: 10px 14px;
+            border: none;
+            border-radius: 8px;
+            background-color: #2c3e50;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .workflow-right button:hover {
+            background-color: #1f2d3a;
+        }
+
+        .workflow-done {
+            background-color: #edf9f1;
+            border-color: #b8dcb8;
+            border-left: 6px solid #27ae60;
+        }
+
+        .workflow-pending {
+            background-color: #fff8e8;
+            border-color: #eadf9b;
+            border-left: 6px solid #d4ac0d;
+        }
+
+        .notes-form label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 15px;
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        .notes-form textarea {
+            width: 100%;
+            max-width: 100%;
+            min-height: 130px;
+            box-sizing: border-box;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            border-radius: 10px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            resize: vertical;
+            background-color: rgba(255, 255, 255, 0.10);
+            color: #ffffff;
+        }
+
+        .notes-form textarea::placeholder {
+            color: #c7d7e6;
+        }
+
+        .notes-empty {
+            color: var(--text-soft);
+            font-style: italic;
+            margin-top: 10px;
+        }
+
+        .action-bar {
+            margin-top: 24px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .page-footer-label {
+            margin-top: 28px;
+            text-align: center;
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.78);
+            letter-spacing: 0.8px;
+            font-weight: bold;
+        }
+
+
+
+
+        @media (max-width: 1100px) {
+            .hero-meta-grid {
+                grid-template-columns: repeat(2, minmax(160px, 1fr));
+            }
+
+            .summary-boxes {
+                grid-template-columns: repeat(2, minmax(140px, 1fr));
+            }
+        }
+
+        @media (max-width: 900px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .page-container {
+                padding: 0 14px;
+            }
+
+            .page-title {
+                font-size: 26px;
+            }
+
+            .system-name-top-right,
+            .bottom-right-text {
+                position: static;
+                display: block;
+                margin-bottom: 12px;
+                text-align: right;
+            }
+
+            .hero-head {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .hero-meta-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-boxes {
+                grid-template-columns: 1fr;
+            }
+
+            .workflow-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .workflow-right {
+                width: 100%;
+            }
+
+            .workflow-right button {
+                width: 100%;
+            }
+
+            .action-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .back-link,
+            .section-btn,
+            .danger-btn {
+                width: 100%;
+            }
+        }
+
+        .nav-toggle-btn {
+            position: fixed;
+            top: 18px;
+            left: 18px;
+            z-index: 1201;
+            border: none;
+            border-radius: 10px;
+            background: rgba(24, 42, 61, 0.96);
+            color: #ffffff;
+            padding: 11px 16px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .nav-toggle-btn:hover {
+            background: #2b4f75;
+        }
+
+        .nav-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 18, 28, 0.42);
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: 0.25s ease;
+            z-index: 1198;
+        }
+
+        .top-nav {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100vh;
+            padding-top: 72px;
+            background: linear-gradient(180deg, #132131 0%, #1d3147 100%);
+            margin: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 18px 0 40px rgba(0, 0, 0, 0.28);
+            transform: translateX(-100%);
+            transition: transform 0.25s ease;
+            z-index: 1200;
+        }
+
+        .job-detail-page.nav-open .top-nav {
+            transform: translateX(0);
+        }
+
+        .top-nav a,
+        .top-nav .dropbtn {
+            display: block;
+            width: 100%;
+            color: white;
+            text-align: left;
+            padding: 14px 20px;
+            text-decoration: none;
+            font-size: 15px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .top-nav a:hover,
+        .dropdown:hover .dropbtn {
+            background-color: rgba(52, 152, 219, 0.22);
+        }
+
+        .dropdown {
+            position: relative;
+            width: 100%;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: static;
+            background-color: rgba(255, 255, 255, 0.04);
+            min-width: 100%;
+            box-shadow: none;
+            z-index: 999;
+            border-radius: 0;
+            overflow: hidden;
+        }
+
+        .dropdown-content a {
+            color: #d9e7f4;
+            padding: 12px 20px 12px 34px;
+            text-decoration: none;
+            display: block;
+            text-align: left;
+            white-space: nowrap;
+            font-size: 14px;
+        }
+
+        .global-header-bar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 0;
+            height: 50px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 0 200px;
+            font-size: 12px;
+            letter-spacing: 1.5px;
+            color: #9fb7d1;
+            text-shadow: 0 0 6px rgba(159, 183, 209, 0.25);
+            z-index: 80;
+
+            font-family: "Segoe UI", "Inter", Arial, sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .bottom-right-text {
+            position: absolute;
+            bottom: -1400px;
+            right: 120px;
+            pointer-events: none;
+            z-index: 9999;
+            font-family: "Segoe UI", Arial, sans-serif;
+            font-size: 10px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .file-list {
+            margin-top: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .file-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            padding: 14px 16px;
+            border-radius: 12px;
+
+            /* 👇 CHANGE HERE */
+            background-color: #fdfaf3;
+            /* soft cream white */
+            border: 1px solid #e3dccc;
+
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.06);
+        }
+
+        .file-info {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .file-name {
+            font-size: 14px;
+            font-weight: bold;
+            color: #024b99;
+            line-height: 1.4;
+            word-break: break-word;
+        }
+
+        .file-meta {
+            margin-top: 4px;
+            font-size: 12px;
+            color: #0658a4;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .file-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 10px;
+            border-radius: 7px;
+            font-size: 12px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            white-space: nowrap;
+            line-height: 1.2;
+        }
+
+        .preview-btn {
+            background: rgba(52, 219, 147, 0.229);
+            color: #4d4289;
+        }
+
+        .preview-btn:hover {
+            background: rgba(52, 152, 219, 0.32);
+        }
+
+        .download-btn {
+            padding: 5px 9px;
+            font-size: 11px;
+            background: rgba(239, 99, 228, 0.332);
+            color: #5273a5;
+        }
+
+        .download-btn:hover {
+            background: rgba(255, 255, 255, 0.24);
+        }
+
+        .delete-btn {
+            background: rgba(246, 77, 58, 0.266);
+            color: #fa311f;
+        }
+
+        .delete-btn:hover {
+            background: rgba(192, 57, 43, 0.35);
+        }
+    </style>
+</head>
+
+<body class="job-detail-page">
+    <button class="nav-toggle-btn" onclick="toggleNav()">☰ Menu</button>
+    <div class="nav-overlay" onclick="toggleNav()"></div>
+    {% include "navbar.html" %}
+
+    <div class="page-container">
+
+        <div class="system-name-top-right">Q-TWO (M) SDN BHD FREIGHT FORWARDING SYSTEM</div>
+
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div id="toast-message">
+            {% for category, message in messages %}
+            <div class="toast-box">
+                ✓ {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <div class="page-shell">
+
+            <div class="page-header">
+                <h1 class="page-title">Job Detail</h1>
+                <p class="page-subtitle">Review shipment progress, workflow activity, dates, and notes.</p>
+            </div>
+
+            <div class="hero-panel">
+                <div class="hero-head">
+                    <h2>Shipment Overview</h2>
+                    <a href="{{ url_for('edit_job', job_id=job.id) }}" class="hero-edit-btn">Edit Job</a>
+                </div>
+
+                <div class="hero-body">
+                    <div class="hero-main-card">
+                        <div class="hero-top-line">
+                            {{ format_job_number(job.job_number) }}
+                            |
+                            {{ job.job_type }}
+                            |
+                            {{ status_icon }} {{ status }}
+                        </div>
+
+                        <div class="hero-meta-grid">
+                            <div class="hero-meta-item">
+                                <div class="hero-meta-label">ETD</div>
+                                <div class="hero-meta-value">
+                                    {{ job.etd.strftime('%d %b %Y') if job.etd else '-' }}
+                                </div>
+                            </div>
+
+                            <div class="hero-meta-item">
+                                <div class="hero-meta-label">ETA</div>
+                                <div class="hero-meta-value">
+                                    {{ job.eta.strftime('%d %b %Y') if job.eta else '-' }}
+                                </div>
+                            </div>
+
+                            <div class="hero-meta-item">
+                                <div class="hero-meta-label">Vessel / Flight</div>
+                                <div class="hero-meta-value">
+                                    {{ job.vessel_flight if job.vessel_flight else '-' }}
+                                </div>
+                            </div>
+
+                            <div class="hero-meta-item">
+                                <div class="hero-meta-label">Client</div>
+                                <div class="hero-meta-value">
+                                    {{ job.client.name if job.client else '-' }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="content-grid">
+                <div class="stack">
+
+                    <div class="panel-card">
+                        <div class="panel-head">
+                            <h2>Documents</h2>
+                            <p>Upload and manage job-related files. You can select multiple files at once. Allowed: PDF,
+                                Excel, and images only. Maximum 10MB per upload request.</p>
+                        </div>
+
+                        <div class="panel-body">
+                            <form action="{{ url_for('upload_job_file', job_id=job.id) }}" method="POST"
+                                enctype="multipart/form-data">
+                                <input type="file" name="file" multiple required>
+                                <div class="form-action-row">
+                                    <button type="submit" class="section-btn">Upload File</button>
+                                </div>
+                            </form>
+
+                            {% if job_files %}
+
+                            <div class="file-list">
+                                {% for file in job_files %}
+                                {% set display_name = file.original_filename if file.original_filename else
+                                file.filename %}
+                                <div class="file-row">
+                                    <div class="file-info">
+                                        <div class="file-name">{{ display_name }}</div>
+                                        <div class="file-meta">
+                                            Uploaded: {{ file.uploaded_at.strftime("%d %b %Y %H:%M") }}
+                                        </div>
+                                    </div>
+
+                                    <div class="file-actions">
+                                        {% if is_previewable_image(display_name) or is_previewable_pdf(display_name) %}
+                                        <a href="{{ url_for('preview_job_file', file_id=file.id) }}" target="_blank"
+                                            class="file-btn preview-btn">
+                                            Preview
+                                        </a>
+                                        {% endif %}
+
+                                        <a href="{{ url_for('download_job_file', file_id=file.id) }}"
+                                            class="file-btn download-btn">
+                                            Download
+                                        </a>
+
+                                        {% if current_user and has_permission(current_user, "can_delete_job_files") %}
+                                        <form method="POST" action="{{ url_for('delete_job_file', file_id=file.id) }}"
+                                            onsubmit="return confirm('Delete this file?');" style="margin:0;">
+                                            <button type="submit" class="file-btn delete-btn">Delete</button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <p class="notes-empty">No files uploaded yet.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="panel-card">
+                        <div class="panel-head">
+                            <div class="job-info-toggle-wrap">
+                                <h2 style="margin: 0;">Full Job Details</h2>
+                                <button id="jobInfoBtn" type="button" onclick="toggleJobInfo()" class="section-btn">
+                                    Show Full Job Details
+                                </button>
+                            </div>
+                            <p>View complete job opening information and shipment reference details.</p>
+                        </div>
+
+                        <div class="panel-body" id="jobInfoContent" style="display: none;">
+                            <div class="detail-table-wrap">
+                                <table class="detail-table">
+                                    <tr>
+                                        <th>Job Number</th>
+                                        <td>{{ format_job_number(job.job_number) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Company</th>
+                                        <td>{{ job.company.company_name if job.company else '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Type</th>
+                                        <td>{{ job.job_type }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Workflow Template</th>
+                                        <td>{{ job.workflow_template }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Client</th>
+                                        <td>{{ job.client.name if job.client else '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Description</th>
+                                        <td>{{ job.description if job.description else '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Date Received</th>
+                                        <td>{{ job.date_received.strftime('%d %b %Y') if job.date_received else '-' }}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Customer Name</th>
+                                        <td>{{ job.customer_name if job.customer_name else '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Customer PO</th>
+                                        <td>{{ job.customer_po if job.customer_po else '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Product Name</th>
+                                        <td>{{ job.product_name if job.product_name else '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Quantity</th>
+                                        <td>{{ job.quantity if job.quantity else '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Packaging Type</th>
+                                        <td>{{ job.packaging_type if job.packaging_type else '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Destination Country</th>
+                                        <td>{{ job.destination_country if job.destination_country else '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Incoterm</th>
+                                        <td>{{ job.incoterm if job.incoterm else '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Vessel / Flight</th>
+                                        <td>{{ job.vessel_flight if job.vessel_flight else '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Requested Shipment Date</th>
+                                        <td>{{ job.requested_ship_date.strftime('%d %b %Y') if job.requested_ship_date
+                                            else '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Person In Charge (PIC)</th>
+                                        <td>{{ job.pic if job.pic else '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Last Updated By</th>
+                                        <td>{{ job.last_updated_by if job.last_updated_by else '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Last Updated At</th>
+                                        <td>{{ job.last_updated_at.strftime('%d %b %Y %H:%M') if job.last_updated_at
+                                            else '-' }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel-card" id="ShipmentDates">
+                        <div class="panel-head">
+                            <h2>Shipment Dates</h2>
+                            <p>Update the key shipment timeline dates for this job.</p>
+                        </div>
+
+                        <div class="panel-body">
+                            <form method="POST" action="{{ url_for('update_job_dates', job_id=job.id) }}"
+                                class="shipment-form">
+                                <table class="shipment-table">
+                                    <tr>
+                                        <th>Created Date</th>
+                                        <td>
+                                            <input type="date" name="created_date"
+                                                value="{{ job.created_date.strftime('%Y-%m-%d') if job.created_date else '' }}">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>ETD</th>
+                                        <td>
+                                            <input type="date" name="etd"
+                                                value="{{ job.etd.strftime('%Y-%m-%d') if job.etd else '' }}">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>ETA</th>
+                                        <td>
+                                            <input type="date" name="eta"
+                                                value="{{ job.eta.strftime('%Y-%m-%d') if job.eta else '' }}">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Delivery Date</th>
+                                        <td>
+                                            <input type="date" name="delivery_date"
+                                                value="{{ job.delivery_date.strftime('%Y-%m-%d') if job.delivery_date else '' }}">
+                                        </td>
+                                    </tr>
+                                </table>
+
+                                <div class="form-action-row">
+                                    <button type="submit" class="section-btn">Update Shipment Dates</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="stack">
+
+                    <div class="panel-card">
+                        <div class="panel-head">
+                            <h2>Workflow Steps</h2>
+                            <p>Track progress and update each operational step below.</p>
+                        </div>
+
+                        <div class="panel-body">
+                            <div class="summary-boxes" style="margin-bottom: 18px;">
+                                <div class="summary-box total">
+                                    <strong>Total Steps</strong>
+                                    <div class="summary-value">{{ total_steps }}</div>
+                                </div>
+
+                                <div class="summary-box completed">
+                                    <strong>Completed</strong>
+                                    <div class="summary-value">{{ completed_steps }}</div>
+                                </div>
+
+                                <div class="summary-box remaining">
+                                    <strong>Remaining</strong>
+                                    <div class="summary-value">{{ remaining_steps }}</div>
+                                </div>
+
+                                <div class="summary-box status">
+                                    <strong>Status</strong>
+                                    <div class="summary-value">{{ status_icon }} {{ status
+                                        }}</div>
+                                </div>
+                            </div>
+
+                            <div class="workflow-list">
+                                {% for step in steps %}
+                                <div
+                                    class="workflow-row {% if step.completed %}workflow-done{% else %}workflow-pending{% endif %}">
+                                    <div class="workflow-left">
+                                        <div class="workflow-step-no">{{ step.step_order }}
+                                        </div>
+
+                                        <div class="workflow-step-content">
+                                            <div class="workflow-step-name">{{
+                                                step.step_name }}</div>
+                                            <div class="workflow-step-meta">
+                                                {% if step.completed %}
+                                                Completed at:
+                                                {{ step.completed_at.strftime('%Y-%m-%d
+                                                %H:%M:%S') if
+                                                step.completed_at else '-' }}
+                                                {% else %}
+                                                Pending
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="workflow-right">
+                                        <form action="{{ url_for('toggle_step', step_id=step.id) }}" method="POST">
+                                            {% if step.completed %}
+                                            <button type="submit">Mark as Pending</button>
+                                            {% else %}
+                                            <button type="submit">Mark Complete</button>
+                                            {% endif %}
+                                        </form>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel-card" id="notes">
+                        <div class="panel-head">
+                            <h2>Job Notes / Communication Log</h2>
+                            <p>Record updates, communication, and important job-related
+                                notes here.</p>
+                        </div>
+
+                        <div class="panel-body">
+                            <form method="POST" action="{{ url_for('add_job_note', job_id=job.id) }}"
+                                class="notes-form">
+                                <label><strong>Add Note</strong></label>
+                                <textarea name="note_text" rows="4" required
+                                    placeholder="Write your note here."></textarea>
+
+                                <div class="form-action-row">
+                                    <button type="submit" class="section-btn">Add
+                                        Note</button>
+                                </div>
+                            </form>
+
+                            <div style="height: 18px;"></div>
+
+                            {% if notes %}
+                            <table class="notes-table">
+                                <tr>
+                                    <th>Date Time</th>
+                                    <th>Note</th>
+                                </tr>
+
+                                {% for note in notes %}
+                                <tr>
+                                    <td>{{ note.created_at.strftime('%d %b %Y %H:%M') }}
+                                    </td>
+                                    <td>{{ note.note_text }}</td>
+                                </tr>
+                                {% endfor %}
+                            </table>
+                            {% else %}
+                            <p class="notes-empty">No notes yet.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="action-bar">
+                <a href="/" class="back-link">Back to Dashboard</a>
+
+                <form method="POST" action="{{ url_for('delete_job', job_id=job.id) }}"
+                    onsubmit="return confirm('Are you sure you want to delete this job? This action cannot be undone.');"
+                    style="margin: 0;">
+                    <button type="submit" class="danger-btn">Delete Job</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    </div>
+    </div>
+
+    <div class="bottom-right-text">© 2026 by Freelance Generation</div>
+    </div>
+
+    <script>
+        window.addEventListener("load", function () {
+            const savedScrollY = sessionStorage.getItem("job_detail_scroll_y");
+
+            if (savedScrollY !== null) {
+                window.scrollTo(0, parseInt(savedScrollY));
+                sessionStorage.removeItem("job_detail_scroll_y");
+            }
+        });
+
+        document.addEventListener("submit", function () {
+            sessionStorage.setItem("job_detail_scroll_y", window.scrollY);
+        });
+
+        function toggleJobInfo() {
+            const section = document.getElementById("jobInfoContent");
+            const button = document.getElementById("jobInfoBtn");
+
+            if (section.style.display === "none") {
+                section.style.display = "block";
+                button.textContent = "Hide Full Job Details";
+            } else {
+                section.style.display = "none";
+                button.textContent = "Show Full Job Details";
+            }
+        }
+    </script>
+
+    <script>
+        function toggleNav() {
+            document.body.classList.toggle("nav-open");
+        }
+    </script>
+
+
+
+</body>
+
+</html>

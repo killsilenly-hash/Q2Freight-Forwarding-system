@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Login</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        body {
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: linear-gradient(135deg, #21344a 0%, #2f4d72 100%);
+            margin: 0;
+            color: white;
+        }
+
+        .login-container {
+            max-width: 420px;
+            margin: 100px auto;
+            padding: 30px;
+            background: rgba(20, 30, 48, 0.85);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(6px);
+        }
+
+        .dashboard-company {
+            font-size: 12px;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            color: #c9d5e2;
+        }
+
+        .page-title {
+            font-size: 26px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .page-subtitle {
+            font-size: 14px;
+            color: #c9d5e2;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: #c9d5e2;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: none;
+            outline: none;
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            box-sizing: border-box;
+        }
+
+        input:focus {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .btn-login,
+        .secondary-link {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            display: block;
+            text-decoration: none;
+            box-sizing: border-box;
+        }
+
+        .btn-login {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-login:hover {
+            background: #2d83c4;
+        }
+
+        .secondary-link {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+        }
+
+        .secondary-link:hover {
+            background: rgba(255, 255, 255, 0.14);
+        }
+
+        .error {
+            background: rgba(231, 76, 60, 0.2);
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            color: #ffb3b3;
+            font-size: 13px;
+        }
+
+        .page-footer-label {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: #c9d5e2;
+        }
+
+        .password-wrap {
+            position: relative;
+        }
+
+        .password-wrap input {
+            padding-right: 52px;
+        }
+
+        .system-name-top-right {
+            position: absolute;
+            top: 55px;
+            right: 461px;
+            font-family: "Segoe UI", Arial, sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #9fb7d1;
+        }
+
+        .toggle-password-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #c9d5e2;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 0;
+        }
+
+        .toggle-password-btn:hover {
+            color: white;
+        }
+
+        .bottom-right-text {
+            position: absolute;
+            bottom: 200px;
+            right: 450px;
+            pointer-events: none;
+            z-index: 9999;
+            font-family: "Segoe UI", Arial, sans-serif;
+            font-size: 9px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        @media (max-width: 768px) {
+            .page-container {
+                padding: 0 14px;
+            }
+
+            .page-title {
+                font-size: 26px;
+            }
+
+            .system-name-top-right,
+            .bottom-right-text {
+                position: static;
+                display: block;
+                margin-bottom: 12px;
+                text-align: right;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="system-name-top-right">
+        Q-TWO (M) SDN BHD FREIGHT FORWARDING SYSTEM
+    </div>
+
+    <div class="login-container">
+
+        <h1 class="page-title">Login</h1>
+        <p class="page-subtitle">Access your operations dashboard</p>
+
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST">
+
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" name="username" required>
+            </div>
+
+            <div class="form-group">
+                <label>Password</label>
+                <div class="password-wrap">
+                    <input type="password" name="password" id="loginPasswordField" required>
+                    <button type="button" class="toggle-password-btn"
+                        onclick="togglePassword('loginPasswordField', this)">Show</button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-login">Login</button>
+            <a href="/register" class="secondary-link">Request New Account</a>
+
+        </form>
+    </div>
+        <div class="bottom-right-text">© 2026 by Freelance Generation</div>
+
+    <script>
+        function togglePassword(fieldId, button) {
+            const field = document.getElementById(fieldId);
+
+            if (field.type === "password") {
+                field.type = "text";
+                button.textContent = "Hide";
+            } else {
+                field.type = "password";
+                button.textContent = "Show";
+            }
+        }
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>User Management</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        :root {
+            --text-main: #ffffff;
+            --text-soft: #c9d5e2;
+            --text-muted: #9fb2c5;
+            --line-soft: rgba(255, 255, 255, 0.08);
+            --accent: #3498db;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #21344a 0%, #2f4d72 100%);
+            margin: 0;
+            color: var(--text-main);
+        }
+
+        .job-detail-page {
+            min-height: 100vh;
+        }
+
+        .nav-toggle-btn {
+            position: fixed;
+            top: 18px;
+            left: 18px;
+            z-index: 1201;
+            border: none;
+            border-radius: 10px;
+            background: rgba(24, 42, 61, 0.96);
+            color: #ffffff;
+            padding: 11px 16px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .nav-toggle-btn:hover {
+            background: #2b4f75;
+        }
+
+        .nav-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 18, 28, 0.42);
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: 0.25s ease;
+            z-index: 1198;
+        }
+
+        .job-detail-page.nav-open .nav-overlay {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        .top-nav {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100vh;
+            padding-top: 72px;
+            background: linear-gradient(180deg, #132131 0%, #1d3147 100%);
+            margin: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 18px 0 40px rgba(0, 0, 0, 0.28);
+            transform: translateX(-100%);
+            transition: transform 0.25s ease;
+            z-index: 1200;
+        }
+
+        .job-detail-page.nav-open .top-nav {
+            transform: translateX(0);
+        }
+
+        .top-nav a,
+        .top-nav .dropbtn {
+            display: block;
+            width: 100%;
+            color: white;
+            text-align: left;
+            padding: 14px 20px;
+            text-decoration: none;
+            font-size: 15px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .top-nav a:hover,
+        .dropdown:hover .dropbtn {
+            background-color: rgba(52, 152, 219, 0.22);
+        }
+
+        .dropdown {
+            position: relative;
+            width: 100%;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: static;
+            background-color: rgba(255, 255, 255, 0.04);
+            min-width: 100%;
+            box-shadow: none;
+            z-index: 999;
+            border-radius: 0;
+            overflow: hidden;
+        }
+
+        .dropdown-content a {
+            color: #d9e7f4;
+            padding: 12px 20px 12px 34px;
+            text-decoration: none;
+            display: block;
+            text-align: left;
+            white-space: nowrap;
+            font-size: 14px;
+        }
+
+        .dropdown-content a:hover {
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .page-container {
+            position: relative;
+            max-width: 1180px;
+            margin: 90px auto 40px auto;
+            padding: 0 20px;
+        }
+
+        .page-shell {
+            background: rgba(15, 25, 37, 0.28);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 22px;
+            padding: 22px;
+            box-shadow: 0 18px 46px rgba(0, 0, 0, 0.18);
+            backdrop-filter: blur(4px);
+        }
+
+        .page-header {
+            background: rgba(20, 33, 48, 0.60);
+            border: 1px solid var(--line-soft);
+            border-radius: 16px;
+            padding: 22px 24px;
+            margin-bottom: 22px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+            backdrop-filter: blur(6px);
+        }
+
+        .page-title {
+            margin: 0;
+            font-size: 32px;
+            font-weight: bold;
+            letter-spacing: 0.2px;
+        }
+
+        .page-subtitle {
+            margin: 8px 0 0 0;
+            color: var(--text-soft);
+            font-size: 15px;
+        }
+
+        .users-table-wrap {
+            background: linear-gradient(180deg, rgba(22, 35, 50, 0.78) 0%, rgba(37, 57, 80, 0.82) 100%);
+            border: 1px solid var(--line-soft);
+            border-radius: 16px;
+            padding: 20px;
+            overflow-x: auto;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        th {
+            text-align: left;
+            padding: 16px 18px;
+            font-size: 13px;
+            color: #1f3247;
+            border-bottom: 1px solid #d8e3ee;
+            background-color: #edf4fb;
+            font-weight: bold;
+        }
+
+        td {
+            padding: 18px;
+            border-bottom: 1px solid #e2eaf2;
+            vertical-align: top;
+            color: #203247;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .user-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar-preview {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .avatar-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .status-active {
+            background: rgba(46, 204, 113, 0.18);
+            color: #1f7a45;
+        }
+
+        .status-inactive {
+            background: rgba(231, 76, 60, 0.18);
+            color: #b03a2e;
+        }
+
+        .role-badge {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            background: rgba(52, 152, 219, 0.18);
+            color: #1f5f8b;
+        }
+
+        .action-btn {
+            border: none;
+            border-radius: 8px;
+            padding: 9px 14px;
+            cursor: pointer;
+            font-weight: 700;
+            color: white;
+        }
+
+        .btn-deactivate {
+            background: #c0392b;
+        }
+
+        .btn-reactivate {
+            background: #27ae60;
+        }
+
+        .btn-reset {
+            background: #2980b9;
+            margin-top: 6px;
+        }
+
+        .protected-text {
+            color: #6c7a89;
+            font-size: 13px;
+            font-style: italic;
+        }
+
+        .flash-message {
+            background: rgba(39, 174, 96, 0.18);
+            color: #c8f7d2;
+            border: 1px solid rgba(39, 174, 96, 0.35);
+            padding: 12px 14px;
+            border-radius: 10px;
+            margin-bottom: 18px;
+        }
+
+        .password-input {
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid #d8e3ee;
+            width: 170px;
+            margin-top: 6px;
+        }
+
+        .page-footer-label {
+            margin-top: 28px;
+            text-align: center;
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.78);
+            letter-spacing: 0.8px;
+            font-weight: bold;
+        }
+
+        .system-name-top-right {
+            position: absolute;
+            top: -52px;
+            right: 20px;
+            pointer-events: none;
+            font-family: "Segoe UI", Arial, sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            line-height: 1;
+            white-space: nowrap;
+            color: #9fb7d1;
+        }
+
+        .bottom-right-text {
+            position: absolute;
+            bottom: -30px;
+            right: 32px;
+            pointer-events: none;
+            z-index: 9999;
+            font-family: "Segoe UI", Arial, sans-serif;
+            font-size: 10px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        @media (max-width: 768px) {
+            .page-container {
+                padding: 0 14px;
+            }
+
+            .page-title {
+                font-size: 26px;
+            }
+
+            .system-name-top-right,
+            .bottom-right-text {
+                position: static;
+                display: block;
+                margin-bottom: 12px;
+                text-align: right;
+            }
+        }
+    </style>
+</head>
+
+<body class="job-detail-page">
+    <button class="nav-toggle-btn" onclick="toggleNav()">☰ Menu</button>
+    <div class="nav-overlay" onclick="toggleNav()"></div>
+    {% include "navbar.html" %}
+
+    <div class="page-container">
+        <div class="system-name-top-right">Q-TWO (M) SDN BHD FREIGHT FORWARDING SYSTEM</div>
+
+        <div class="page-shell">
+            <div class="page-header">
+                <h1 class="page-title">User Management</h1>
+                <p class="page-subtitle">Admin can view users and deactivate, reactivate, or reset staff passwords.</p>
+            </div>
+
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            {% for message in messages %}
+            <div class="flash-message">{{ message }}</div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <div class="users-table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Last Login</th>
+                            <th>Action</th>
+                            <th>Password</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>
+                                <div class="user-cell">
+                                    <div class="avatar-preview">
+                                        <img
+                                            src="{{ url_for('static', filename=user.avatar or 'avatars/avatar_01.png') }}">
+                                    </div>
+                                    <div>{{ user.username }}</div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="role-badge">{{ user.role }}</span>
+                            </td>
+                            <td>
+                            <td>
+                                {% if user.last_login_at %}
+                                {{ user.last_login_at.strftime('%d %b %Y %H:%M') }}
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.role == "admin" %}
+                                <span class="protected-text">Protected</span>
+                                {% else %}
+                                <form method="POST" action="{{ url_for('toggle_user_status', user_id=user.id) }}">
+                                    {% if user.is_active %}
+                                    <button type="submit" class="action-btn btn-deactivate">Deactivate</button>
+                                    {% else %}
+                                    <button type="submit" class="action-btn btn-reactivate">Reactivate</button>
+                                    {% endif %}
+                                </form>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.role == "admin" %}
+                                <span class="protected-text">Protected</span>
+                                {% else %}
+                                <form method="POST" action="{{ url_for('reset_user_password', user_id=user.id) }}">
+                                    <input type="password" name="new_password" class="password-input"
+                                        placeholder="New Password" required>
+                                    <br>
+                                    <button type="submit" class="action-btn btn-reset">Reset</button>
+                                </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="bottom-right-text">© 2026 by Freelance Generation</div>
+    </div>
+
+    <script>
+        function toggleNav() {
+            document.body.classList.toggle("nav-open");
+        }
+    </script>
+
+</body>
+
+</html>

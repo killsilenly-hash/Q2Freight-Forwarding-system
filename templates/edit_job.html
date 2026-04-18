@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Edit Job</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        :root {
+            --text-main: #ffffff;
+            --text-soft: #c9d5e2;
+            --line-soft: rgba(255, 255, 255, 0.08);
+            --accent: #3498db;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #21344a 0%, #2f4d72 100%);
+            margin: 0;
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        .job-detail-page {
+            min-height: 100vh;
+        }
+
+        .nav-toggle-btn {
+            position: fixed;
+            top: 18px;
+            left: 18px;
+            z-index: 1201;
+            border: none;
+            border-radius: 10px;
+            background: rgba(24, 42, 61, 0.96);
+            color: #ffffff;
+            padding: 11px 16px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .nav-toggle-btn:hover {
+            background: #2b4f75;
+        }
+
+        .nav-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 18, 28, 0.42);
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: 0.25s ease;
+            z-index: 1198;
+        }
+
+        .job-detail-page.nav-open .nav-overlay {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        .top-nav {
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: flex-start !important;
+            align-items: stretch !important;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100vh;
+            padding-top: 72px;
+            background: linear-gradient(180deg, #132131 0%, #1d3147 100%);
+            margin: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 18px 0 40px rgba(0, 0, 0, 0.28);
+            transform: translateX(-100%);
+            transition: transform 0.25s ease;
+            z-index: 1200;
+        }
+
+        .job-detail-page.nav-open .top-nav {
+            transform: translateX(0);
+        }
+
+        .top-nav a,
+        .top-nav .dropbtn {
+            display: block;
+            width: 100%;
+            color: white;
+            text-align: left;
+            padding: 14px 20px;
+            text-decoration: none;
+            font-size: 15px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            box-sizing: border-box;
+        }
+
+        .top-nav a:hover,
+        .dropdown:hover .dropbtn {
+            background-color: rgba(52, 152, 219, 0.22);
+        }
+
+        .dropdown {
+            position: relative;
+            width: 100%;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: static;
+            background-color: rgba(255, 255, 255, 0.04);
+            min-width: 100%;
+            box-shadow: none;
+            border-radius: 0;
+            overflow: hidden;
+        }
+
+        .dropdown-content a {
+            color: #d9e7f4;
+            padding: 12px 20px 12px 34px;
+            text-decoration: none;
+            display: block;
+            text-align: left;
+            white-space: nowrap;
+            font-size: 14px;
+            background: transparent;
+            box-sizing: border-box;
+        }
+
+        .dropdown-content a:hover {
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .page-container {
+            position: relative;
+            max-width: 1180px;
+            margin: 90px auto 40px auto;
+            padding: 0 20px;
+        }
+
+        .system-name-top-right {
+            position: absolute;
+            top: -52px;
+            right: 20px;
+            pointer-events: none;
+            font-family: "Segoe UI", Arial, sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            line-height: 1;
+            white-space: nowrap;
+            color: #9fb7d1;
+        }
+
+        .page-shell {
+            background: rgba(15, 25, 37, 0.28);
+            border-radius: 22px;
+            padding: 22px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 18px 46px rgba(0, 0, 0, 0.18);
+            backdrop-filter: blur(4px);
+        }
+
+        .page-header {
+            background: rgba(20, 33, 48, 0.60);
+            border: 1px solid var(--line-soft);
+            border-radius: 16px;
+            padding: 22px 24px;
+            margin-bottom: 22px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+            backdrop-filter: blur(6px);
+        }
+
+        .page-title {
+            margin: 0;
+            font-size: 30px;
+        }
+
+        .page-subtitle {
+            color: var(--text-soft);
+            margin-top: 8px;
+            margin-bottom: 0;
+        }
+
+        .panel-card {
+            background: rgba(22, 35, 50, 0.8);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+        }
+
+        .panel-card h3 {
+            margin-top: 0;
+            margin-bottom: 16px;
+            font-size: 21px;
+            color: #ffffff;
+        }
+
+        .panel-card p.section-note {
+            margin-top: -6px;
+            margin-bottom: 18px;
+            color: var(--text-soft);
+            font-size: 14px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            gap: 12px 16px;
+            align-items: center;
+        }
+
+        .form-grid label {
+            font-weight: bold;
+            color: #dce7f2;
+        }
+
+        .form-grid input,
+        .form-grid select,
+        .form-grid textarea {
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            width: 100%;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+        }
+
+        .form-grid textarea {
+            min-height: 110px;
+            resize: vertical;
+        }
+
+        .form-grid input::placeholder,
+        .form-grid textarea::placeholder {
+            color: #c7d7e6;
+        }
+
+        .form-grid input:focus,
+        .form-grid select:focus,
+        .form-grid textarea:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.18);
+        }
+
+        .form-grid option {
+            color: #1f2d3a;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .primary-btn {
+            background: #3498db;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .primary-btn:hover {
+            background-color: #2387cf;
+        }
+
+        .secondary-link {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 16px;
+            border-radius: 8px;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .secondary-link:hover {
+            background-color: rgba(255, 255, 255, 0.16);
+        }
+
+        .error-box {
+            color: #ffd8dd;
+            background: rgba(176, 42, 55, 0.22);
+            border: 1px solid rgba(241, 174, 181, 0.45);
+            padding: 12px 14px;
+            border-radius: 8px;
+            margin-bottom: 18px;
+        }
+
+        .page-footer-label {
+            text-align: center;
+            margin-top: 20px;
+            color: #ccc;
+        }
+
+        .bottom-right-text {
+            position: absolute;
+            bottom: -33px;
+            right: 24px;
+            pointer-events: none;
+            z-index: 9999;
+            font-family: "Segoe UI", Arial, sans-serif;
+            font-size: 10px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        @media (max-width: 768px) {
+            .page-container {
+                padding: 0 14px;
+            }
+
+            .page-title {
+                font-size: 26px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .primary-btn,
+            .secondary-link {
+                width: 100%;
+                text-align: center;
+            }
+
+            .system-name-top-right,
+            .bottom-right-text {
+                position: static;
+                display: block;
+                margin-bottom: 12px;
+                text-align: right;
+            }
+        }
+    </style>
+</head>
+
+<body class="job-detail-page">
+    <button class="nav-toggle-btn" onclick="toggleNav()">☰ Menu</button>
+    <div class="nav-overlay" onclick="toggleNav()"></div>
+    {% include "navbar.html" %}
+
+    <div class="page-container">
+        <div class="system-name-top-right">Q-TWO (M) SDN BHD FREIGHT FORWARDING SYSTEM</div>
+
+        <div class="page-shell">
+
+            <div class="page-header">
+                <h1 class="page-title">Edit Job</h1>
+                <p class="page-subtitle">Update job details and shipment information.</p>
+            </div>
+
+            {% if error %}
+            <div class="error-box">
+                <strong>{{ error }}</strong>
+            </div>
+            {% endif %}
+
+            <form method="POST">
+
+                <div class="panel-card">
+                    <h3>Basic Job Information</h3>
+                    <p class="section-note">Update the main job setup, workflow, client, and core shipment details.</p>
+
+                    <div class="form-grid">
+                        <label for="company_id">Company</label>
+                        <select name="company_id" id="company_id" required>
+                            {% for company in companies %}
+                            <option value="{{ company.id }}" {% if company.id==job.company_id %}selected{% endif %}>
+                                {{ company.company_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+
+                        <label for="job_type">Job Type</label>
+                        <select name="job_type" id="job_type" required>
+                            <option value="Import" {% if job.job_type=="Import" %}selected{% endif %}>Import</option>
+                            <option value="Export" {% if job.job_type=="Export" %}selected{% endif %}>Export</option>
+                        </select>
+
+                        <label for="workflow_template">Workflow Template</label>
+                        <select name="workflow_template" id="workflow_template" required>
+                            {% for template in workflow_templates %}
+                            <option value="{{ template }}" {% if template==job.workflow_template %}selected{% endif %}>
+                                {{ template }}
+                            </option>
+                            {% endfor %}
+                        </select>
+
+                        <label for="client_id">Client</label>
+                        <select name="client_id" id="client_id" required>
+                            {% for client in clients %}
+                            <option value="{{ client.id }}" {% if client.id==job.client_id %}selected{% endif %}>
+                                {{ client.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+
+                        <label for="description">Description</label>
+                        <textarea name="description"
+                            id="description">{{ job.description if job.description else '' }}</textarea>
+                    </div>
+                </div>
+
+                <div class="panel-card">
+                    <h3>Shipment Dates</h3>
+                    <p class="section-note">Update shipment schedule dates for this job.</p>
+
+                    <div class="form-grid">
+                        <label for="created_date">Created Date</label>
+                        <input type="date" name="created_date" id="created_date"
+                            value="{{ job.created_date.strftime('%Y-%m-%d') if job.created_date else '' }}">
+
+                        <label for="etd">ETD</label>
+                        <input type="date" name="etd" id="etd"
+                            value="{{ job.etd.strftime('%Y-%m-%d') if job.etd else '' }}">
+
+                        <label for="eta">ETA</label>
+                        <input type="date" name="eta" id="eta"
+                            value="{{ job.eta.strftime('%Y-%m-%d') if job.eta else '' }}">
+
+                        <label for="delivery_date">Delivery Date</label>
+                        <input type="date" name="delivery_date" id="delivery_date"
+                            value="{{ job.delivery_date.strftime('%Y-%m-%d') if job.delivery_date else '' }}">
+                    </div>
+                </div>
+
+                <div class="panel-card">
+                    <h3>Booking Intake Information</h3>
+                    <p class="section-note">These fields match the Full Job Details section so users can complete the
+                        job later after getting the job number first.</p>
+
+                    <div class="form-grid">
+                        <label for="date_received">Date Received</label>
+                        <input type="date" name="date_received" id="date_received"
+                            value="{{ job.date_received.strftime('%Y-%m-%d') if job.date_received else '' }}">
+
+                        <label for="customer_name">Customer Name</label>
+                        <input type="text" name="customer_name" id="customer_name"
+                            value="{{ job.customer_name if job.customer_name else '' }}">
+
+                        <label for="customer_po">Customer PO Number</label>
+                        <input type="text" name="customer_po" id="customer_po"
+                            value="{{ job.customer_po if job.customer_po else '' }}">
+
+                        <label for="product_name">Product Name</label>
+                        <input type="text" name="product_name" id="product_name"
+                            value="{{ job.product_name if job.product_name else '' }}">
+
+                        <label for="quantity">Quantity</label>
+                        <input type="text" name="quantity" id="quantity"
+                            value="{{ job.quantity if job.quantity else '' }}">
+
+                        <label for="packaging_type">Packaging Type</label>
+                        <input type="text" name="packaging_type" id="packaging_type"
+                            value="{{ job.packaging_type if job.packaging_type else '' }}">
+
+                        <label for="destination_country">Destination Country</label>
+                        <input type="text" name="destination_country" id="destination_country"
+                            value="{{ job.destination_country if job.destination_country else '' }}">
+
+                        <label for="incoterm">Incoterm</label>
+                        <input type="text" name="incoterm" id="incoterm"
+                            value="{{ job.incoterm if job.incoterm else '' }}">
+
+                        <label for="vessel_flight">Vessel / Flight</label>
+                        <input type="text" name="vessel_flight" id="vessel_flight"
+                            value="{{ job.vessel_flight if job.vessel_flight else '' }}">
+
+                        <label for="requested_ship_date">Requested Shipment Date</label>
+                        <input type="date" name="requested_ship_date" id="requested_ship_date"
+                            value="{{ job.requested_ship_date.strftime('%Y-%m-%d') if job.requested_ship_date else '' }}">
+
+                        <label for="pic">Person In Charge (PIC)</label>
+                        <select name="pic" id="pic">
+                            <option value="">-- Select PIC --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="panel-card">
+                    <div class="form-actions">
+                        <button type="submit" class="primary-btn">Update Job</button>
+                        <a href="{{ url_for('job_detail', job_id=job.id) }}" class="secondary-link">Back</a>
+                    </div>
+                </div>
+
+            </form>
+
+        <div class="bottom-right-text">© 2026 by Freelance Generation</div>
+    </div>
+
+    <script>
+        function toggleNav() {
+            document.body.classList.toggle("nav-open");
+        }
+    </script>
+
+    <script>
+        function normalizeText(value) {
+            return (value || "").trim().toLowerCase();
+        }
+
+        function autoSelectPIC() {
+            const jobTypeSelect = document.getElementById("job_type");
+            const picSelect = document.getElementById("pic");
+
+            if (!jobTypeSelect || !picSelect) {
+                return;
+            }
+
+            const jobType = normalizeText(jobTypeSelect.value);
+
+            if (!jobType) {
+                return;
+            }
+
+            let targetKeyword = "";
+
+            if (jobType === "import") {
+                targetKeyword = "import";
+            } else if (jobType === "export") {
+                targetKeyword = "export";
+            } else {
+                return;
+            }
+
+            for (let i = 1; i < picSelect.options.length; i++) {
+                const option = picSelect.options[i];
+                const roleText = normalizeText(option.getAttribute("data-role"));
+                const labelText = normalizeText(option.textContent);
+
+                if (roleText.includes(targetKeyword) || labelText.includes(targetKeyword)) {
+                    picSelect.selectedIndex = i;
+                    return;
+                }
+            }
+        }
+
+        function loadClientContacts(keepCurrentPic) {
+            const clientSelect = document.getElementById("client_id");
+            const picSelect = document.getElementById("pic");
+            const currentPic = "{{ job.pic or '' }}";
+
+            if (!clientSelect || !picSelect) {
+                return;
+            }
+
+            const selectedClientId = clientSelect.value;
+
+            picSelect.innerHTML = '<option value="">-- Select PIC --</option>';
+
+            if (!selectedClientId) {
+                return;
+            }
+
+            fetch(`/get_client_contacts/${selectedClientId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const contacts = data.contacts || [];
+
+                    contacts.forEach(contact => {
+                        const option = document.createElement("option");
+                        option.value = contact.name;
+                        option.textContent = contact.label;
+                        option.setAttribute("data-role", contact.role || "");
+
+                        if (keepCurrentPic && contact.name === currentPic) {
+                            option.selected = true;
+                        }
+
+                        picSelect.appendChild(option);
+                    });
+
+                    if (!picSelect.value) {
+                        autoSelectPIC();
+                    }
+                })
+                .catch(error => {
+                    console.error("Error loading client contacts:", error);
+                });
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const clientSelect = document.getElementById("client_id");
+            const jobTypeSelect = document.getElementById("job_type");
+
+            if (clientSelect) {
+                clientSelect.addEventListener("change", function () {
+                    loadClientContacts(false);
+                });
+            }
+
+            if (jobTypeSelect) {
+                jobTypeSelect.addEventListener("change", function () {
+                    autoSelectPIC();
+                });
+            }
+
+            loadClientContacts(true);
+        });
+    </script>
+
+</body>
+
+</html>

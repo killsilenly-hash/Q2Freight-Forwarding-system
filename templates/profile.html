@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Profile</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #213758;
+            margin: 0;
+            color: #2c3e50;
+        }
+
+        .job-detail-page {
+            min-height: 100vh;
+        }
+
+        .nav-toggle-btn {
+            position: fixed;
+            top: 18px;
+            left: 18px;
+            z-index: 1201;
+            border: none;
+            border-radius: 10px;
+            background: rgba(24, 42, 61, 0.96);
+            color: #ffffff;
+            padding: 11px 16px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .nav-toggle-btn:hover {
+            background: #2b4f75;
+        }
+
+        .nav-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 18, 28, 0.42);
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: 0.25s ease;
+            z-index: 1198;
+        }
+
+        .job-detail-page.nav-open .nav-overlay {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        .top-nav {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100vh;
+            padding-top: 72px;
+            background: linear-gradient(180deg, #132131 0%, #1d3147 100%);
+            margin: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 18px 0 40px rgba(0, 0, 0, 0.28);
+            transform: translateX(-100%);
+            transition: transform 0.25s ease;
+            z-index: 1200;
+        }
+
+        .job-detail-page.nav-open .top-nav {
+            transform: translateX(0);
+        }
+
+        .top-nav a,
+        .top-nav .dropbtn {
+            display: block;
+            width: 100%;
+            color: white;
+            text-align: left;
+            padding: 14px 20px;
+            text-decoration: none;
+            font-size: 15px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .top-nav a:hover,
+        .dropdown:hover .dropbtn {
+            background-color: rgba(52, 152, 219, 0.22);
+        }
+
+        .dropdown {
+            position: relative;
+            width: 100%;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: static;
+            background-color: rgba(255, 255, 255, 0.04);
+            min-width: 100%;
+            box-shadow: none;
+            z-index: 999;
+            border-radius: 0;
+            overflow: hidden;
+        }
+
+        .dropdown-content a {
+            color: #d9e7f4;
+            padding: 12px 20px 12px 34px;
+            text-decoration: none;
+            display: block;
+            text-align: left;
+            white-space: nowrap;
+            font-size: 14px;
+        }
+
+        .dropdown-content a:hover {
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .page-container {
+            position: relative;
+            max-width: 1180px;
+            margin: 90px auto 40px auto;
+            padding: 0 20px;
+        }
+
+        .page-shell {
+            background: #fcfcf5;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 22px;
+            padding: 22px;
+            box-shadow: 0 18px 46px rgba(0, 0, 0, 0.18);
+            backdrop-filter: blur(4px);
+        }
+
+        .page-header {
+            background: #26364a;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 22px 24px;
+            margin-bottom: 22px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+            backdrop-filter: blur(6px);
+        }
+
+        .page-title {
+            margin: 0;
+            font-size: 32px;
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        .page-subtitle {
+            margin: 8px 0 0 0;
+            color: #9fb7d1;
+        }
+
+        .system-name-top-right {
+            position: absolute;
+            top: -52px;
+            right: 20px;
+            pointer-events: none;
+            font-family: "Segoe UI", Arial, sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            line-height: 1;
+            white-space: nowrap;
+            color: #9fb7d1;
+        }
+
+        .page-footer-label {
+            margin-top: 28px;
+            text-align: center;
+            font-size: 16px;
+            color: rgba(56, 59, 119, 0.78);
+            letter-spacing: 0.8px;
+            font-weight: bold;
+        }
+
+        .flash-message {
+            margin: 0 auto 18px auto;
+            max-width: 700px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            background: rgba(39, 174, 96, 0.15);
+            border: 1px solid rgba(39, 174, 96, 0.35);
+            color: #1f7a43;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .profile-container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .avatar-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            justify-items: center;
+        }
+
+        .avatar-option {
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .avatar-option input {
+            display: none;
+        }
+
+        .avatar-option img {
+            width: 92px;
+            height: 92px;
+            border-radius: 50%;
+            transition: 0.2s;
+            border: 3px solid transparent;
+            background: white;
+            object-fit: cover;
+        }
+
+        .avatar-option input:checked+img {
+            border: 3px solid #3498db;
+            transform: scale(1.04);
+            box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.18);
+        }
+
+        .save-btn {
+            margin-top: 24px;
+            padding: 11px 18px;
+            background: #3498db;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .save-btn:hover {
+            background: #2387cf;
+        }
+
+        .bottom-right-text {
+            position: absolute;
+            bottom: -43px;
+            right: 20px;
+            pointer-events: none;
+            z-index: 9999;
+            font-family: "Segoe UI", Arial, sans-serif;
+            font-size: 10px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        @media (max-width: 900px) {
+            .avatar-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .system-name-top-right {
+                position: static;
+                display: block;
+                margin-bottom: 12px;
+                text-align: right;
+            }
+        }
+    </style>
+</head>
+
+<body class="job-detail-page">
+    <button class="nav-toggle-btn" onclick="toggleNav()">☰ Menu</button>
+    <div class="nav-overlay" onclick="toggleNav()"></div>
+
+    {% include "navbar.html" %}
+
+    <div class="page-container">
+        <div class="system-name-top-right">Q-TWO (M) SDN BHD FREIGHT FORWARDING SYSTEM</div>
+
+        <div class="page-shell">
+            <div class="page-header">
+                <h1 class="page-title">My Profile</h1>
+                <p class="page-subtitle">Choose your avatar for the system profile display.</p>
+            </div>
+
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            {% for message in messages %}
+            <div class="flash-message">{{ message }}</div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <div class="profile-container">
+                <h2>Choose Your Avatar</h2>
+
+                <form method="POST">
+                    <div class="avatar-grid">
+
+                        {% for avatar in avatar_list %}
+                        <label class="avatar-option">
+                            <input type="radio" name="avatar" value="{{ avatar }}" {% if avatar==current_avatar
+                                %}checked{% endif %}>
+                            <img src="{{ url_for('static', filename=avatar) }}">
+                        </label>
+                        {% endfor %}
+
+                    </div>
+
+                    <button type="submit" class="save-btn">Save Avatar</button>
+                </form>
+            </div>
+
+            <div class="page-footer-label">Profile</div>
+            <div class="bottom-right-text">© 2026 by Freelance Generation @PhangMY</div>
+        </div>
+    </div>
+
+    <script>
+        function toggleNav() {
+            document.body.classList.toggle("nav-open");
+        }
+    </script>
+
+</body>
+
+</html>
