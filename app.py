@@ -3193,7 +3193,41 @@ def initialize_database():
         db.create_all()
         run_safe_migrations()
 
+
+def ensure_bootstrap_admin():
+    with app.app_context():
+        admin_username = os.getenv("BOOTSTRAP_ADMIN_USERNAME")
+        admin_password = os.getenv("BOOTSTRAP_ADMIN_PASSWORD")
+
+        if not admin_username or not admin_password:
+            return
+
+        existing_admin = User.query.filter_by(role="admin").first()
+        if existing_admin:
+            return
+
+        existing_user = User.query.filter_by(username=admin_username).first()
+        if existing_user:
+            existing_user.role = "admin"
+            existing_user.is_active = True
+            if not existing_user.avatar:
+                existing_user.avatar = "avatars/avatar_01.png"
+            db.session.commit()
+            return
+
+        new_admin = User(
+            username=admin_username,
+            role="admin",
+            is_active=True,
+            avatar="avatars/avatar_01.png",
+        )
+        new_admin.set_password(admin_password)
+        db.session.add(new_admin)
+        db.session.commit()
+
+
 initialize_database()
+ensure_bootstrap_admin()
 
 if __name__ == "__main__":
     app.run(debug=True)
