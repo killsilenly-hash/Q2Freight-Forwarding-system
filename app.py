@@ -55,6 +55,12 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
 
+# =========================
+# AUTO INIT DB (FOR RENDER)
+# =========================
+with app.app_context():
+    db.create_all()
+    run_safe_migrations()
 
 class Company(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -541,6 +547,13 @@ def perform_actual_delete(item_type, item_id):
 
 def run_safe_migrations():
     db.create_all()
+
+# =========================
+# AUTO INIT DB (FOR RENDER)
+# =========================
+with app.app_context():
+    db.create_all()
+    run_safe_migrations()
 
     # =========================
     # CLIENT TABLE
@@ -3182,9 +3195,12 @@ def delete_job(job_id):
     return redirect(url_for("dashboard"))
 
 
-if __name__ == "__main__":
+def initialize_database():
     with app.app_context():
         db.create_all()
         run_safe_migrations()
 
+initialize_database()
+
+if __name__ == "__main__":
     app.run(debug=True)
