@@ -55,13 +55,6 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
 
-# =========================
-# AUTO INIT DB (FOR RENDER)
-# =========================
-with app.app_context():
-    db.create_all()
-    run_safe_migrations()
-
 class Company(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     company_name = db.Column(db.String(200), nullable=False)
